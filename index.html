@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS FINAL STABLE</title>
+<title>CD-107 WMS FINAL FIX</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
+
 body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
 header{padding:14px;background:#111827;position:sticky;top:0}
 .container{padding:14px;max-width:1400px;margin:auto}
@@ -36,12 +37,13 @@ button{background:#111827;border:1px solid #1f2937;color:#fff;padding:10px;borde
 table{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}
 th{background:#111827;position:sticky;top:0;padding:10px}
 td{padding:8px;border-bottom:1px solid #1f2937}
+
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 WMS FINAL STABLE</header>
+<header>📊 CD-107 WMS FINAL FIX</header>
 
 <div class="container">
 
@@ -111,24 +113,26 @@ td{padding:8px;border-bottom:1px solid #1f2937}
 let base=[],view=[];
 let apanha={},pulmao={};
 
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-
 function norm(v){
 return String(v||'').trim().replace(/\s/g,'');
 }
 
 /* =========================
-COMPARATIVO (REAL FIX FINAL)
+UTIL: YIELD CORRETO
+========================= */
+const yieldToUI = () => new Promise(r => requestAnimationFrame(r));
+
+/* =========================
+COMPARATIVO FIX FINAL
 ========================= */
 document.getElementById('file1').addEventListener('change', async e=>{
 
 const file=e.target.files[0];
 const text=await file.text();
-
 const lines=text.split(/\r?\n/);
 
 base=[];
-let total=lines.length;
+const total=lines.length;
 
 for(let i=1;i<total;i++){
 
@@ -143,11 +147,16 @@ qtd:+(c[6]||0),
 valor:Math.abs(+(c[9]||0))
 });
 
-/* 🔥 PAUSA REAL (EVITA TRAVAMENTO) */
-if(i%500===0){
-document.getElementById('b1').style.width=(i/total*100)+'%';
-document.getElementById('s1').innerText='Processando '+Math.round(i/total*100)+'%';
-await sleep(1);
+/* 🔥 PROGRESSO ESTÁVEL */
+if(i % 300 === 0 || i === total-1){
+
+const pct=Math.round((i/total)*100);
+
+document.getElementById('b1').style.width=pct+'%';
+document.getElementById('s1').innerText='Processando '+pct+'%';
+
+/* 🔥 YIELD REAL (NÃO TRAVA) */
+await yieldToUI();
 }
 }
 
@@ -157,6 +166,7 @@ kpi();
 
 document.getElementById('b1').style.width='100%';
 document.getElementById('s1').innerText='Concluído ✔';
+
 });
 
 /* =========================
@@ -183,6 +193,7 @@ apanha[cod].push(c[0]);
 kpi();
 document.getElementById('b2').style.width='100%';
 document.getElementById('s2').innerText='OK';
+
 });
 
 /* =========================
@@ -209,6 +220,7 @@ pulmao[cod].push(1);
 kpi();
 document.getElementById('b3').style.width='100%';
 document.getElementById('s3').innerText='OK';
+
 });
 
 /* =========================
