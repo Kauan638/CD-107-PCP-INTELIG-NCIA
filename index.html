@@ -88,22 +88,23 @@ small{color:#94a3b8}
 
 <!-- UPLOADS -->
 <div class="box">
+
 <h3>📥 Importação de Arquivos</h3>
 
 <div>
-<strong>1️⃣ Comparativo de Estoque</strong><br>
-<small>Base principal (códigos, quantidades e valores)</small><br>
+<strong>1️⃣ Comparativo</strong><br>
+<small>Base principal de estoque</small><br>
 <input type="file" id="file1">
 </div>
 
 <div>
-<strong>2️⃣ Apanha (Ruas Fixas)</strong><br>
+<strong>2️⃣ Apanha</strong><br>
 <small>Endereços de separação</small><br>
 <input type="file" id="file2">
 </div>
 
 <div>
-<strong>3️⃣ Pulmões</strong><br>
+<strong>3️⃣ Pulmão</strong><br>
 <small>Estoque do CD</small><br>
 <input type="file" id="file3">
 </div>
@@ -122,13 +123,15 @@ small{color:#94a3b8}
 
 </div>
 
-<!-- AÇÕES -->
+<!-- BOTÕES -->
 <div class="box">
 
 <button onclick="ordenar('valor')">Maior valor</button>
+<button onclick="ordenar('menorValor')">Menor valor</button>
 <button onclick="ordenar('codigo')">Código A-Z</button>
+
 <button onclick="exportarExcel()">Excel</button>
-<button onclick="imprimirRelatorio()">Imprimir Relatório</button>
+<button onclick="imprimirRelatorio()">Imprimir</button>
 
 </div>
 
@@ -149,7 +152,6 @@ small{color:#94a3b8}
 </thead>
 
 <tbody id="tb"></tbody>
-
 </table>
 
 </div>
@@ -159,7 +161,7 @@ small{color:#94a3b8}
 <script>
 
 /* =========================
-BASES
+BASE
 ========================= */
 let base=[];
 let view=[];
@@ -167,7 +169,7 @@ let apanha={};
 let pulmao={};
 
 /* =========================
-NORMALIZAÇÃO
+NORMALIZAÇÃO FORTE (FIX PRINCIPAL)
 ========================= */
 function norm(v){
 return String(v||'')
@@ -219,6 +221,7 @@ const c=lines[i].split(';');
 if(c.length<6)continue;
 
 const cod=norm(c[5]);
+
 if(!apanha[cod])apanha[cod]=[];
 apanha[cod].push(c[0]);
 }
@@ -240,6 +243,7 @@ const c=lines[i].split(';');
 if(c.length<7)continue;
 
 const cod=norm(c[5]);
+
 if(!pulmao[cod])pulmao[cod]=[];
 pulmao[cod].push(`${c[1]}-${c[2]}-${c[3]}-${c[4]}`);
 }
@@ -313,14 +317,15 @@ c.checked=el.checked;
 }
 
 /* =========================
-ORDENAR
+ORDENAÇÃO (MAIOR + MENOR VALOR)
 ========================= */
 function ordenar(t){
 
 let d=[...view];
 
-if(t=='valor')d.sort((a,b)=>b.valor-a.valor);
-if(t=='codigo')d.sort((a,b)=>a.codigo.localeCompare(b.codigo));
+if(t=='valor') d.sort((a,b)=>b.valor-a.valor);
+if(t=='menorValor') d.sort((a,b)=>a.valor-b.valor);
+if(t=='codigo') d.sort((a,b)=>a.codigo.localeCompare(b.codigo));
 
 render(d);
 }
@@ -343,9 +348,9 @@ Descricao:x.desc,
 Local:x.local,
 Qtd:x.qtd,
 Valor:x.valor,
-Apanha:(apanha[cod]||[]).join('|'),
-Pulmao:(pulmao[cod]||[]).join('|'),
-Pulmoes:(pulmao[cod]||[]).length
+Apanha:(apanha[norm(cod)]||[]).join('|'),
+Pulmao:(pulmao[norm(cod)]||[]).join('|'),
+Pulmoes:(pulmao[norm(cod)]||[]).length
 };
 });
 
@@ -356,7 +361,7 @@ XLSX.writeFile(wb,'relatorio.xlsx');
 }
 
 /* =========================
-IMPRIMIR (CORRIGIDO APANHA)
+IMPRIMIR (APANHA CORRIGIDO DEFINITIVO)
 ========================= */
 function imprimirRelatorio(){
 
@@ -381,7 +386,9 @@ h2{background:#eee;padding:5px}
 `;
 
 sel.forEach(cod=>{
-const x=base.find(i=>i.codigo==cod);
+
+const key=norm(cod);
+const x=base.find(i=>i.codigo==key);
 
 html+=`
 <div class="item">
@@ -390,12 +397,8 @@ html+=`
 <p>Qtd: ${x.qtd}</p>
 <p>Valor: ${x.valor}</p>
 
-<p><b>Apanha:</b> ${
-apanha[norm(cod)] && apanha[norm(cod)].length
-? apanha[norm(cod)].join(', ')
-: 'SEM APANHA'
-}</p>
-<p><b>Pulmão:</b> ${(pulmao[cod]||[]).length ? pulmao[cod].join(', ') : 'SEM PULMÃO'}</p>
+<p><b>Apanha:</b> ${(apanha[key]||[]).length?apanha[key].join(', '):'SEM APANHA'}</p>
+<p><b>Pulmão:</b> ${(pulmao[key]||[]).length?pulmao[key].join(', '):'SEM PULMÃO'}</p>
 
 </div>
 `;
