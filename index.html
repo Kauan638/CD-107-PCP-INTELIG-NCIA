@@ -1,185 +1,412 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CD-107 PCP Inteligência</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>CD-107 PCP Inteligência</title>
 
-  <style>
-    body{
-      background:#111827;
-      color:white;
-      font-family:Arial;
-      margin:0;
-      padding:20px;
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+}
+
+header{
+    background:#111827;
+    padding:20px;
+    border-bottom:1px solid #1f2937;
+}
+
+header h1{
+    font-size:28px;
+}
+
+.container{
+    padding:20px;
+}
+
+.upload{
+    background:#1e293b;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:20px;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.card{
+    background:#1e293b;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,.3);
+}
+
+.card h3{
+    color:#94a3b8;
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+.valor{
+    font-size:32px;
+    font-weight:bold;
+}
+
+.graficos{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-top:20px;
+}
+
+.box{
+    background:#1e293b;
+    padding:20px;
+    border-radius:15px;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+th{
+    background:#111827;
+    padding:12px;
+}
+
+td{
+    padding:10px;
+    border-bottom:1px solid #334155;
+}
+
+input[type="text"]{
+    width:100%;
+    padding:12px;
+    margin-top:20px;
+    border:none;
+    border-radius:8px;
+}
+
+.critico{
+    color:#ef4444;
+    font-weight:bold;
+}
+
+@media(max-width:900px){
+    .graficos{
+        grid-template-columns:1fr;
     }
+}
 
-    h1{
-      text-align:center;
-    }
-
-    .cards{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:15px;
-      margin-top:20px;
-    }
-
-    .card{
-      background:#1f2937;
-      padding:20px;
-      border-radius:12px;
-      text-align:center;
-    }
-
-    .valor{
-      font-size:28px;
-      font-weight:bold;
-      margin-top:10px;
-    }
-
-    canvas{
-      background:white;
-      border-radius:10px;
-      margin-top:20px;
-      padding:10px;
-    }
-
-    #upload{
-      margin-top:20px;
-      margin-bottom:20px;
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-<h1>📊 CD-107 PCP INTELIGÊNCIA</h1>
+<header>
+    <h1>📊 CD-107 PCP INTELIGÊNCIA</h1>
+</header>
 
-<input type="file" id="upload" accept=".txt">
+<div class="container">
 
-<div class="cards">
-  <div class="card">
-    💰 Divergência Total
-    <div class="valor" id="valorTotal">R$ 0</div>
-  </div>
-
-  <div class="card">
-    📦 Qtde Divergente
-    <div class="valor" id="qtdeTotal">0</div>
-  </div>
-
-  <div class="card">
-    📋 Itens
-    <div class="valor" id="itensTotal">0</div>
-  </div>
-
-  <div class="card">
-    🚨 Críticos
-    <div class="valor" id="criticos">0</div>
-  </div>
+<div class="upload">
+    <h2>Importar Comparativo de Estoque</h2>
+    <br>
+    <input type="file" id="arquivo" accept=".txt">
 </div>
 
-<canvas id="grafico"></canvas>
+<div class="cards">
+
+<div class="card">
+    <h3>💰 Valor Divergente Total</h3>
+    <div class="valor" id="valorTotal">R$ 0,00</div>
+</div>
+
+<div class="card">
+    <h3>📦 Quantidade Divergente</h3>
+    <div class="valor" id="qtdeTotal">0</div>
+</div>
+
+<div class="card">
+    <h3>📋 Itens Divergentes</h3>
+    <div class="valor" id="itensTotal">0</div>
+</div>
+
+<div class="card">
+    <h3>🚨 Itens Críticos</h3>
+    <div class="valor" id="criticos">0</div>
+</div>
+
+</div>
+
+<div class="graficos">
+
+<div class="box">
+    <canvas id="graficoValor"></canvas>
+</div>
+
+<div class="box">
+    <canvas id="graficoQtde"></canvas>
+</div>
+
+</div>
+
+<input type="text" id="pesquisa" placeholder="Pesquisar produto...">
+
+<div class="box" style="margin-top:20px">
+
+<table id="tabela">
+<thead>
+<tr>
+<th>Código</th>
+<th>Descrição</th>
+<th>Local</th>
+<th>Qtd Divergente</th>
+<th>Valor Divergente</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+</div>
+
+</div>
 
 <script>
 
-let chart;
+let chartValor;
+let chartQtde;
 
 document
-.getElementById('upload')
-.addEventListener('change', lerArquivo);
+.getElementById('arquivo')
+.addEventListener('change', carregarArquivo);
 
-function lerArquivo(event){
+function carregarArquivo(e){
 
- const arquivo = event.target.files[0];
+const arquivo = e.target.files[0];
 
- const reader = new FileReader();
+if(!arquivo) return;
 
- reader.onload = function(e){
+const reader = new FileReader();
 
-   const texto = e.target.result;
+reader.onload = function(evt){
+    processarTXT(evt.target.result);
+};
 
-   processar(texto);
-
- };
-
- reader.readAsText(arquivo,'latin1');
+reader.readAsText(arquivo,'latin1');
 
 }
 
-function processar(texto){
+function processarTXT(texto){
 
- const linhas = texto.split('\n');
+const linhas = texto.split(/\r?\n/);
 
- let valorTotal = 0;
- let qtdeTotal = 0;
- let itens = 0;
- let criticos = 0;
+let valorTotal = 0;
+let qtdeTotal = 0;
+let itens = 0;
+let criticos = 0;
 
- let produtos = [];
- let valores = [];
+let dados = [];
 
- for(let i=1;i<linhas.length;i++){
+for(let i=1;i<linhas.length;i++){
 
-   const col = linhas[i].split(';');
+    let col = linhas[i].split(";");
 
-   if(col.length < 10) continue;
+    if(col.length < 10) continue;
 
-   itens++;
+    const codigo = col[0];
+    const descricao = col[1];
+    const local = col[2];
 
-   let valor = parseFloat(
-     String(col[col.length-2])
-     .replace(/\./g,'')
-     .replace(',','.')
-   );
+    const qtdDiv =
+    parseFloat(
+        String(col[6] || "0")
+        .replace(/\./g,'')
+        .replace(',','.')
+    ) || 0;
 
-   if(isNaN(valor))
-      valor = 0;
+    const valorDiv =
+    parseFloat(
+        String(col[9] || "0")
+        .replace(/\./g,'')
+        .replace(',','.')
+    ) || 0;
 
-   valorTotal += valor;
+    valorTotal += valorDiv;
+    qtdeTotal += Math.abs(qtdDiv);
 
-   if(Math.abs(valor) > 20000)
-      criticos++;
+    let status = "Baixo";
 
-   produtos.push(col[1]);
+    if(Math.abs(valorDiv) > 20000){
+        status = "Crítico";
+        criticos++;
+    }
+    else if(Math.abs(valorDiv) > 10000){
+        status = "Alto";
+    }
+    else if(Math.abs(valorDiv) > 5000){
+        status = "Médio";
+    }
 
-   valores.push(valor);
+    itens++;
 
- }
-
- document.getElementById('valorTotal')
- .innerHTML =
- valorTotal.toLocaleString('pt-BR',{
- style:'currency',
- currency:'BRL'
- });
-
- document.getElementById('itensTotal')
- .innerHTML = itens;
-
- document.getElementById('criticos')
- .innerHTML = criticos;
-
- if(chart)
-   chart.destroy();
-
- chart = new Chart(
- document.getElementById('grafico'),
- {
-   type:'bar',
-   data:{
-     labels: produtos.slice(0,10),
-     datasets:[{
-       label:'Valor Divergente',
-       data: valores.slice(0,10)
-     }]
-   }
- });
+    dados.push({
+        codigo,
+        descricao,
+        local,
+        qtdDiv,
+        valorDiv,
+        status
+    });
 
 }
+
+atualizarKPIs(
+valorTotal,
+qtdeTotal,
+itens,
+criticos
+);
+
+popularTabela(dados);
+
+criarGraficos(dados);
+
+}
+
+function atualizarKPIs(valor,qtde,itens,criticos){
+
+document.getElementById('valorTotal').innerHTML =
+valor.toLocaleString(
+'pt-BR',
+{
+style:'currency',
+currency:'BRL'
+});
+
+document.getElementById('qtdeTotal').innerHTML =
+qtde.toLocaleString('pt-BR');
+
+document.getElementById('itensTotal').innerHTML =
+itens;
+
+document.getElementById('criticos').innerHTML =
+criticos;
+
+}
+
+function popularTabela(dados){
+
+const tbody =
+document.querySelector('#tabela tbody');
+
+tbody.innerHTML='';
+
+dados
+.sort((a,b)=>
+Math.abs(b.valorDiv)-Math.abs(a.valorDiv))
+.slice(0,100)
+.forEach(item=>{
+
+const tr = document.createElement('tr');
+
+tr.innerHTML=`
+<td>${item.codigo}</td>
+<td>${item.descricao}</td>
+<td>${item.local}</td>
+<td>${item.qtdDiv}</td>
+<td>R$ ${item.valorDiv.toLocaleString('pt-BR')}</td>
+<td class="${item.status==='Crítico'?'critico':''}">
+${item.status}
+</td>
+`;
+
+tbody.appendChild(tr);
+
+});
+
+}
+
+function criarGraficos(dados){
+
+const top =
+[...dados]
+.sort((a,b)=>
+Math.abs(b.valorDiv)-Math.abs(a.valorDiv))
+.slice(0,10);
+
+if(chartValor) chartValor.destroy();
+
+chartValor = new Chart(
+document.getElementById('graficoValor'),
+{
+type:'bar',
+data:{
+labels:top.map(x=>x.descricao.substring(0,20)),
+datasets:[{
+label:'Valor Divergente',
+data:top.map(x=>x.valorDiv)
+}]
+}
+});
+
+if(chartQtde) chartQtde.destroy();
+
+chartQtde = new Chart(
+document.getElementById('graficoQtde'),
+{
+type:'bar',
+data:{
+labels:top.map(x=>x.descricao.substring(0,20)),
+datasets:[{
+label:'Qtd Divergente',
+data:top.map(x=>x.qtdDiv)
+}]
+}
+});
+
+}
+
+document
+.getElementById('pesquisa')
+.addEventListener('keyup',function(){
+
+let filtro =
+this.value.toLowerCase();
+
+document
+.querySelectorAll('#tabela tbody tr')
+.forEach(linha=>{
+
+linha.style.display =
+linha.innerText
+.toLowerCase()
+.includes(filtro)
+? ''
+: 'none';
+
+});
+
+});
 
 </script>
 
