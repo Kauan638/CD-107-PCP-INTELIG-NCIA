@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS FINAL FIX</title>
+<title>CD-107 WMS ULTRA FIX</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-
 body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
 header{padding:14px;background:#111827;position:sticky;top:0}
 .container{padding:14px;max-width:1400px;margin:auto}
@@ -27,23 +26,19 @@ input[type=file]{display:none}
 
 .status{font-size:11px;color:#9ca3af;margin-top:4px}
 
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:10px}
-.filters input{padding:10px;background:#111827;border:1px solid #1f2937;color:#fff;border-radius:8px}
-
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-button{background:#111827;border:1px solid #1f2937;color:#fff;padding:10px;border-radius:8px;cursor:pointer}
-
-.table{margin-top:10px;border:1px solid #1f2937;border-radius:10px;overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
 th{background:#111827;position:sticky;top:0;padding:10px}
 td{padding:8px;border-bottom:1px solid #1f2937}
 
+.table{margin-top:10px;border:1px solid #1f2937;border-radius:10px;overflow:auto}
+
+button{background:#111827;border:1px solid #1f2937;color:#fff;padding:10px;border-radius:8px}
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 WMS FINAL FIX</header>
+<header>📊 CD-107 WMS ULTRA FIX</header>
 
 <div class="container">
 
@@ -60,7 +55,7 @@ td{padding:8px;border-bottom:1px solid #1f2937}
 <input id="file1" type="file">
 </label>
 <div class="bar"><div id="b1" class="bar-fill"></div></div>
-<div class="status" id="s1">Aguardando</div>
+<div id="s1" class="status">Aguardando</div>
 </div>
 
 <div class="upload">
@@ -68,7 +63,7 @@ td{padding:8px;border-bottom:1px solid #1f2937}
 <input id="file2" type="file">
 </label>
 <div class="bar"><div id="b2" class="bar-fill"></div></div>
-<div class="status" id="s2">Aguardando</div>
+<div id="s2" class="status">Aguardando</div>
 </div>
 
 <div class="upload">
@@ -76,23 +71,9 @@ td{padding:8px;border-bottom:1px solid #1f2937}
 <input id="file3" type="file">
 </label>
 <div class="bar"><div id="b3" class="bar-fill"></div></div>
-<div class="status" id="s3">Aguardando</div>
+<div id="s3" class="status">Aguardando</div>
 </div>
 
-</div>
-
-<div class="filters">
-<input id="f1" placeholder="Código">
-<input id="f2" placeholder="Descrição">
-<input id="f3" placeholder="Local">
-<input id="f4" placeholder="Valor mínimo">
-</div>
-
-<div class="actions">
-<button onclick="ordenar('maior')">Maior</button>
-<button onclick="ordenar('menor')">Menor</button>
-<button onclick="exportar()">Excel</button>
-<button onclick="imprimir()">Imprimir</button>
 </div>
 
 <div class="table">
@@ -113,31 +94,27 @@ td{padding:8px;border-bottom:1px solid #1f2937}
 let base=[],view=[];
 let apanha={},pulmao={};
 
+const sleep = () => new Promise(r=>setTimeout(r,0));
+
 function norm(v){
 return String(v||'').trim().replace(/\s/g,'');
 }
 
 /* =========================
-UTIL: YIELD CORRETO
-========================= */
-const yieldToUI = () => new Promise(r => requestAnimationFrame(r));
-
-/* =========================
-COMPARATIVO FIX FINAL
+COMPARATIVO ULTRA FIX (SEM 99%)
 ========================= */
 document.getElementById('file1').addEventListener('change', async e=>{
 
-const file=e.target.files[0];
-const text=await file.text();
-const lines=text.split(/\r?\n/);
+const text = await e.target.files[0].text();
+const lines = text.split(/\r?\n/);
 
-base=[];
-const total=lines.length;
+base = [];
+const total = lines.length;
 
 for(let i=1;i<total;i++){
 
-const c=lines[i].split(';');
-if(c.length<8)continue;
+const c = lines[i].split(';');
+if(c.length<8) continue;
 
 base.push({
 codigo:norm(c[0]),
@@ -147,25 +124,30 @@ qtd:+(c[6]||0),
 valor:Math.abs(+(c[9]||0))
 });
 
-/* 🔥 PROGRESSO ESTÁVEL */
-if(i % 300 === 0 || i === total-1){
-
-const pct=Math.round((i/total)*100);
+/* PROGRESSO ESTÁVEL */
+if(i % 500 === 0){
+const pct = Math.floor((i/total)*100);
 
 document.getElementById('b1').style.width=pct+'%';
 document.getElementById('s1').innerText='Processando '+pct+'%';
 
-/* 🔥 YIELD REAL (NÃO TRAVA) */
-await yieldToUI();
+/* 🔥 EVITA FREEZE DO ÚLTIMO FRAME */
+await sleep();
 }
 }
+
+/* 🔥 FORÇA FINALIZAÇÃO REAL DO BROWSER */
+await sleep();
 
 view=[...base];
 render();
 kpi();
 
+/* FINALIZA 100% SEM TRAVAR */
+requestAnimationFrame(()=>{
 document.getElementById('b1').style.width='100%';
 document.getElementById('s1').innerText='Concluído ✔';
+});
 
 });
 
@@ -174,8 +156,8 @@ APANHA
 ========================= */
 document.getElementById('file2').addEventListener('change', async e=>{
 
-const text=await e.target.files[0].text();
-const lines=text.split(/\r?\n/);
+const text = await e.target.files[0].text();
+const lines = text.split(/\r?\n/);
 
 apanha={};
 
@@ -187,7 +169,7 @@ const cod=norm(c[5]);
 if(!cod)continue;
 
 apanha[cod]=apanha[cod]||[];
-apanha[cod].push(c[0]);
+apanha[cod].push(1);
 }
 
 kpi();
@@ -201,8 +183,8 @@ PULMÃO
 ========================= */
 document.getElementById('file3').addEventListener('change', async e=>{
 
-const text=await e.target.files[0].text();
-const lines=text.split(/\r?\n/);
+const text = await e.target.files[0].text();
+const lines = text.split(/\r?\n/);
 
 pulmao={};
 
@@ -253,34 +235,6 @@ for(let k in pulmao)p+=pulmao[k].length;
 
 document.getElementById('k2').innerText=a;
 document.getElementById('k3').innerText=p;
-}
-
-function ordenar(t){
-if(t==='maior')view.sort((a,b)=>b.valor-a.valor);
-if(t==='menor')view.sort((a,b)=>a.valor-b.valor);
-render();
-}
-
-function exportar(){
-
-const data=view.map(x=>({
-Codigo:x.codigo,
-Desc:x.desc,
-Local:x.local,
-Qtd:x.qtd,
-Valor:x.valor,
-Apanha:apanha[x.codigo]?.length||0,
-Pulmao:pulmao[x.codigo]?.length||0
-}));
-
-const ws=XLSX.utils.json_to_sheet(data);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,'CD107');
-XLSX.writeFile(wb,'CD107.xlsx');
-}
-
-function imprimir(){
-window.print();
 }
 
 </script>
