@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>CD-107 PCP Inteligência</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
 *{
 margin:0;
 padding:0;
@@ -26,10 +24,6 @@ header{
 background:#111827;
 padding:20px;
 border-bottom:1px solid #1f2937;
-}
-
-header h1{
-font-size:28px;
 }
 
 .container{
@@ -54,18 +48,17 @@ margin-bottom:20px;
 background:#1e293b;
 padding:20px;
 border-radius:15px;
-box-shadow:0 0 15px rgba(0,0,0,.3);
 }
 
 .card h3{
 color:#94a3b8;
 font-size:14px;
-margin-bottom:10px;
 }
 
 .valor{
-font-size:28px;
+font-size:24px;
 font-weight:bold;
+margin-top:10px;
 }
 
 .graficos{
@@ -88,49 +81,39 @@ border-collapse:collapse;
 
 th{
 background:#111827;
-padding:12px;
+padding:10px;
 }
 
 td{
-padding:10px;
+padding:8px;
 border-bottom:1px solid #334155;
+font-size:13px;
 }
 
-input[type=text]{
+input{
 width:100%;
-padding:12px;
-margin-top:20px;
-border:none;
+padding:10px;
+margin-top:15px;
 border-radius:8px;
+border:none;
 }
 
 button{
 background:#2563eb;
 color:white;
 border:none;
-padding:10px 18px;
+padding:10px 15px;
 border-radius:8px;
 cursor:pointer;
-font-weight:bold;
+margin-top:10px;
 }
 
-button:hover{
-opacity:.9;
-}
-
-.critico{
-color:#ef4444;
-font-weight:bold;
-}
+.critico{color:#ef4444;font-weight:bold;}
+.alto{color:#f59e0b;font-weight:bold;}
 
 @media(max-width:1200px){
-
-.graficos{
-grid-template-columns:1fr;
+.graficos{grid-template-columns:1fr;}
 }
-
-}
-
 </style>
 </head>
 
@@ -143,571 +126,193 @@ grid-template-columns:1fr;
 <div class="container">
 
 <div class="upload">
-
 <h2>Importar Comparativo de Estoque</h2>
-
-<br>
-
 <input type="file" id="arquivo" accept=".txt">
-
 </div>
 
 <div class="cards">
 
-<div class="card">
-<h3>💰 Divergência Total</h3>
-<div class="valor" id="valorTotal">R$ 0,00</div>
-</div>
-
-<div class="card">
-<h3>💵 Divergência Positiva</h3>
-<div class="valor" id="valorPositivo">R$ 0,00</div>
-</div>
-
-<div class="card">
-<h3>💸 Divergência Negativa</h3>
-<div class="valor" id="valorNegativo">R$ 0,00</div>
-</div>
-
-<div class="card">
-<h3>📦 Quantidade Divergente</h3>
-<div class="valor" id="qtdeTotal">0</div>
-</div>
-
-<div class="card">
-<h3>📋 Itens Divergentes</h3>
-<div class="valor" id="itensTotal">0</div>
-</div>
-
-<div class="card">
-<h3>🚨 Itens Críticos</h3>
-<div class="valor" id="criticos">0</div>
-</div>
-
-<div class="card">
-<h3>⚠️ Itens Altos</h3>
-<div class="valor" id="altos">0</div>
-</div>
-
-<div class="card">
-<h3>📍 Locais Divergentes</h3>
-<div class="valor" id="locais">0</div>
-</div>
+<div class="card"><h3>Total Divergência</h3><div class="valor" id="total"></div></div>
+<div class="card"><h3>Positivo</h3><div class="valor" id="positivo"></div></div>
+<div class="card"><h3>Negativo</h3><div class="valor" id="negativo"></div></div>
+<div class="card"><h3>Itens</h3><div class="valor" id="itens"></div></div>
+<div class="card"><h3>Críticos</h3><div class="valor" id="criticos"></div></div>
+<div class="card"><h3>Locais</h3><div class="valor" id="locais"></div></div>
 
 </div>
 
-<div class="graficos">
+<input type="text" id="pesquisa" placeholder="Pesquisar...">
 
 <div class="box">
-<canvas id="graficoValor"></canvas>
-</div>
-
-<div class="box">
-<canvas id="graficoQtde"></canvas>
-</div>
-
-<div class="box">
-<canvas id="graficoLocal"></canvas>
-</div>
-
-</div>
-
-<input
-type="text"
-id="pesquisa"
-placeholder="Pesquisar produto..."
->
-
-<div
-style="
-display:flex;
-gap:10px;
-margin-top:15px;
-flex-wrap:wrap;
-"
->
-
-<button onclick="filtrarTodos()">
-📋 Todos
-</button>
-
-<button onclick="filtrarCriticos()">
-🚨 Críticos
-</button>
-
-<button onclick="filtrarAltos()">
-⚠️ Altos
-</button>
-
-</div>
-
-<div
-class="box"
-style="margin-top:20px"
->
-
-<table id="tabela">
-
+<table>
 <thead>
-
 <tr>
-
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
 <th>Qtd Divergente</th>
 <th>Valor Divergente</th>
 <th>Status</th>
-
 </tr>
-
 </thead>
-
-<tbody>
-
-</tbody>
-
+<tbody id="tbody"></tbody>
 </table>
+</div>
 
+<div class="graficos">
+<div class="box"><canvas id="g1"></canvas></div>
+<div class="box"><canvas id="g2"></canvas></div>
+<div class="box"><canvas id="g3"></canvas></div>
 </div>
 
 </div>
-
 <script>
 
-let chartValor;
-let chartQtde;
-let chartLocal;
+let dados = [];
+let g1,g2,g3;
 
-let dadosGlobais = [];
+function parseBR(v){
+return parseFloat(String(v)
+.replace(/\./g,'')
+.replace(',', '.')) || 0;
+}
 
-document
-.getElementById('arquivo')
-.addEventListener('change', carregarArquivo);
+document.getElementById('arquivo')
+.addEventListener('change', e => {
 
-function carregarArquivo(e){
-
-const arquivo = e.target.files[0];
-
-if(!arquivo) return;
+const file = e.target.files[0];
+if(!file) return;
 
 const reader = new FileReader();
 
-reader.onload = function(evt){
-
-processarTXT(
-evt.target.result
-);
-
+reader.onload = function(ev){
+processar(ev.target.result);
 };
 
-reader.readAsText(
-arquivo,
-'latin1'
-);
+reader.readAsText(file,'latin1');
 
-}
-  function processarTXT(texto){
+});
 
-const linhas = texto.split(/\r?\n/);
+function processar(txt){
 
-let valorTotal = 0;
-let valorPositivo = 0;
-let valorNegativo = 0;
+const linhas = txt.split(/\r?\n/);
 
-let qtdeTotal = 0;
+dados = [];
 
-let itens = 0;
-
-let criticos = 0;
-let altos = 0;
-
-const locaisUnicos = new Set();
-
-dadosGlobais = [];
+let total=0, pos=0, neg=0, crit=0;
+const locais = new Set();
 
 for(let i=1;i<linhas.length;i++){
 
-let col = linhas[i].split(";");
+const c = linhas[i].split(';');
+if(c.length < 10) continue;
 
-if(col.length < 10)
-continue;
+const codigo = c[0];
+const desc = c[1];
+const local = c[2];
 
-const codigo = col[0];
-const descricao = col[1];
-const local = col[2];
+const qtd = parseBR(c[6]);
+const valor = parseBR(c[9]);
 
-locaisUnicos.add(local);
+locais.add(local);
 
-const qtdDiv =
-parseFloat(
-String(col[6] || "0")
-.replace(/\./g,'')
-.replace(',','.')
-) || 0;
-
-const valorDiv =
-parseFloat(
-String(col[9] || "0")
-.replace(/\./g,'')
-.replace(',','.')
-) || 0;
-
-valorTotal += valorDiv;
-
-if(valorDiv > 0)
-valorPositivo += valorDiv;
-
-if(valorDiv < 0)
-valorNegativo += valorDiv;
-
-qtdeTotal += Math.abs(qtdDiv);
+total += valor;
+if(valor>0) pos+=valor;
+if(valor<0) neg+=valor;
 
 let status = "Baixo";
+if(Math.abs(valor)>20000){status="Crítico"; crit++;}
+else if(Math.abs(valor)>10000){status="Alto";}
 
-if(Math.abs(valorDiv) > 20000){
-
-status = "Crítico";
-criticos++;
-
-}
-else if(Math.abs(valorDiv) > 10000){
-
-status = "Alto";
-altos++;
-
-}
-else if(Math.abs(valorDiv) > 5000){
-
-status = "Médio";
-
+dados.push({codigo,desc,local,qtd,valor,status});
 }
 
-itens++;
+document.getElementById('total').innerText =
+total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-dadosGlobais.push({
+document.getElementById('positivo').innerText =
+pos.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-codigo,
-descricao,
-local,
-qtdDiv,
-valorDiv,
-status
+document.getElementById('negativo').innerText =
+neg.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-});
+document.getElementById('itens').innerText = dados.length;
+document.getElementById('criticos').innerText = crit;
+document.getElementById('locais').innerText = locais.size;
 
+renderTabela(dados);
+renderGraficos(dados);
 }
 
-document.getElementById('valorTotal')
-.innerHTML =
-valorTotal.toLocaleString(
-'pt-BR',
-{
-style:'currency',
-currency:'BRL'
-});
+function renderTabela(arr){
 
-document.getElementById('valorPositivo')
-.innerHTML =
-valorPositivo.toLocaleString(
-'pt-BR',
-{
-style:'currency',
-currency:'BRL'
-});
+const tb = document.getElementById('tbody');
+tb.innerHTML='';
 
-document.getElementById('valorNegativo')
-.innerHTML =
-valorNegativo.toLocaleString(
-'pt-BR',
-{
-style:'currency',
-currency:'BRL'
-});
+arr.sort((a,b)=>Math.abs(b.valor)-Math.abs(a.valor))
+.forEach(d=>{
 
-document.getElementById('qtdeTotal')
-.innerHTML =
-qtdeTotal.toLocaleString('pt-BR');
-
-document.getElementById('itensTotal')
-.innerHTML =
-itens;
-
-document.getElementById('criticos')
-.innerHTML =
-criticos;
-
-document.getElementById('altos')
-.innerHTML =
-altos;
-
-document.getElementById('locais')
-.innerHTML =
-locaisUnicos.size;
-
-popularTabela(
-dadosGlobais
-);
-
-criarGraficos(
-dadosGlobais
-);
-
-}
-
-function popularTabela(dados){
-
-const tbody =
-document.querySelector(
-'#tabela tbody'
-);
-
-tbody.innerHTML = '';
-
-dados
-.sort(
-(a,b)=>
-Math.abs(b.valorDiv)
--
-Math.abs(a.valorDiv)
-)
-.slice(0,100)
-.forEach(item=>{
-
-const tr =
-document.createElement('tr');
-
-tr.innerHTML = `
-<td>${item.codigo}</td>
-<td>${item.descricao}</td>
-<td>${item.local}</td>
-<td>${item.qtdDiv}</td>
-<td>
-${item.valorDiv.toLocaleString(
-'pt-BR',
-{
-style:'currency',
-currency:'BRL'
-}
-)}
+tb.innerHTML += `
+<tr>
+<td>${d.codigo}</td>
+<td>${d.desc}</td>
+<td>${d.local}</td>
+<td>${d.qtd}</td>
+<td>${d.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+<td class="${d.status=='Crítico'?'critico':d.status=='Alto'?'alto':''}">
+${d.status}
 </td>
-<td class="${
-item.status==='Crítico'
-?
-'critico'
-:
-''
-}">
-${item.status}
-</td>
-`;
-
-tbody.appendChild(tr);
-
+</tr>`;
 });
-
 }
 
-function criarGraficos(dados){
+function renderGraficos(arr){
 
-const topFinanceiro =
-[...dados]
-.sort(
-(a,b)=>
-Math.abs(b.valorDiv)
--
-Math.abs(a.valorDiv)
-)
-.slice(0,10);
+const top = [...arr].sort((a,b)=>Math.abs(b.valor)-Math.abs(a.valor)).slice(0,10);
 
-if(chartValor)
-chartValor.destroy();
+if(g1) g1.destroy();
+if(g2) g2.destroy();
+if(g3) g3.destroy();
 
-chartValor =
-new Chart(
-document.getElementById(
-'graficoValor'
-),
-{
+g1 = new Chart(document.getElementById('g1'),{
 type:'bar',
 data:{
-labels:
-topFinanceiro.map(
-x=>
-x.descricao.substring(
-0,
-20
-)
-),
-datasets:[
-{
-label:
-'Valor Divergente',
-data:
-topFinanceiro.map(
-x=>
-x.valorDiv
-)
+labels:top.map(x=>x.desc.substring(0,20)),
+datasets:[{label:'Valor',data:top.map(x=>x.valor)}]
 }
-]
-}
-}
-);
-
-if(chartQtde)
-chartQtde.destroy();
-
-chartQtde =
-new Chart(
-document.getElementById(
-'graficoQtde'
-),
-{
-type:'bar',
-data:{
-labels:
-topFinanceiro.map(
-x=>
-x.descricao.substring(
-0,
-20
-)
-),
-datasets:[
-{
-label:
-'Qtd Divergente',
-data:
-topFinanceiro.map(
-x=>
-x.qtdDiv
-)
-}
-]
-}
-}
-);
-
-const mapaLocais = {};
-
-dados.forEach(item=>{
-
-if(!mapaLocais[item.local])
-mapaLocais[item.local]=0;
-
-mapaLocais[item.local]+=
-Math.abs(item.valorDiv);
-
 });
 
-const locais =
-Object.entries(mapaLocais)
-.sort(
-(a,b)=>
-b[1]-a[1]
-)
-.slice(0,10);
-
-if(chartLocal)
-chartLocal.destroy();
-
-chartLocal =
-new Chart(
-document.getElementById(
-'graficoLocal'
-),
-{
+g2 = new Chart(document.getElementById('g2'),{
 type:'bar',
 data:{
-labels:
-locais.map(
-x=>x[0]
-),
-datasets:[
-{
-label:
-'Impacto por Local',
-data:
-locais.map(
-x=>x[1]
-)
+labels:top.map(x=>x.desc.substring(0,20)),
+datasets:[{label:'Qtd',data:top.map(x=>x.qtd)}]
 }
-]
-}
-}
-);
-
-}
-
-function filtrarCriticos(){
-
-popularTabela(
-
-dadosGlobais.filter(
-x=>
-Math.abs(
-x.valorDiv
-) > 20000
-)
-
-);
-
-}
-
-function filtrarAltos(){
-
-popularTabela(
-
-dadosGlobais.filter(
-x=>
-Math.abs(
-x.valorDiv
-) > 10000
-)
-
-);
-
-}
-
-function filtrarTodos(){
-
-popularTabela(
-dadosGlobais
-);
-
-}
-
-document
-.getElementById(
-'pesquisa'
-)
-.addEventListener(
-'keyup',
-function(){
-
-let filtro =
-this.value
-.toLowerCase();
-
-document
-.querySelectorAll(
-'#tabela tbody tr'
-)
-.forEach(linha=>{
-
-linha.style.display =
-linha.innerText
-.toLowerCase()
-.includes(
-filtro
-)
-?
-''
-:
-'none';
-
 });
 
+const map = {};
+arr.forEach(x=>{
+map[x.local]=(map[x.local]||0)+Math.abs(x.valor);
+});
+
+const loc = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+g3 = new Chart(document.getElementById('g3'),{
+type:'bar',
+data:{
+labels:loc.map(x=>x[0]),
+datasets:[{label:'Local',data:loc.map(x=>x[1])}]
+}
+});
+}
+
+document.getElementById('pesquisa')
+.addEventListener('input',function(){
+const v=this.value.toLowerCase();
+
+document.querySelectorAll('tbody tr').forEach(tr=>{
+tr.style.display = tr.innerText.toLowerCase().includes(v)?'':'none';
+});
 });
 
 </script>
