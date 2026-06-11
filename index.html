@@ -3,84 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS ULTRA FIX</title>
+<title>CD-107 PCP INTELIGÊNCIA</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
-header{padding:14px;background:#111827;position:sticky;top:0}
+
+header{
+padding:14px;
+background:#111827;
+position:sticky;
+top:0;
+font-weight:bold;
+}
+
 .container{padding:14px;max-width:1400px;margin:auto}
 
-.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.kpi div{background:#111827;padding:12px;border-left:3px solid #2563eb;border-radius:8px}
+.kpi{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;
+margin-top:10px;
+}
 
-.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:10px}
-.upload{background:#0f172a;padding:12px;border:1px solid #1f2937;border-radius:10px}
+.kpi div{
+background:#111827;
+padding:12px;
+border-radius:8px;
+border:1px solid #1f2937;
+}
 
-.btn-upload{display:block;background:#2563eb;color:#fff;padding:10px;border-radius:8px;text-align:center;cursor:pointer}
-input[type=file]{display:none}
+.upload{
+margin-top:10px;
+background:#0f172a;
+padding:12px;
+border:1px solid #1f2937;
+border-radius:10px;
+}
 
-.bar{height:6px;background:#1f2937;border-radius:10px;overflow:hidden;margin-top:8px}
-.bar-fill{height:100%;width:0%;background:#22c55e}
+.bar{
+height:6px;
+background:#1f2937;
+border-radius:10px;
+overflow:hidden;
+margin-top:6px;
+}
 
-.status{font-size:11px;color:#9ca3af;margin-top:4px}
+.bar-fill{
+height:100%;
+width:0%;
+background:#22c55e;
+}
 
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#111827;position:sticky;top:0;padding:10px}
-td{padding:8px;border-bottom:1px solid #1f2937}
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
 
-.table{margin-top:10px;border:1px solid #1f2937;border-radius:10px;overflow:auto}
+th{
+background:#111827;
+position:sticky;
+top:0;
+padding:10px;
+}
 
-button{background:#111827;border:1px solid #1f2937;color:#fff;padding:10px;border-radius:8px}
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
+}
+
+.table{
+margin-top:10px;
+border:1px solid #1f2937;
+border-radius:10px;
+overflow:auto;
+max-height:500px;
+}
+
+button{
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+margin-right:6px;
+}
+
+button:hover{opacity:0.85}
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 WMS ULTRA FIX</header>
+<header>📊 CD-107 PCP INTELIGÊNCIA</header>
 
 <div class="container">
 
+<!-- KPI -->
 <div class="kpi">
-<div>📦 Itens <b id="k1">0</b></div>
-<div>📍 Apanhas <b id="k2">0</b></div>
-<div>🏭 Pulmões <b id="k3">0</b></div>
+<div>📦 Itens: <b id="k1">0</b></div>
+<div>📍 Apanhas: <b id="k2">0</b></div>
+<div>🏭 Pulmões: <b id="k3">0</b></div>
 </div>
 
-<div class="upload-grid">
-
+<!-- UPLOADS -->
 <div class="upload">
-<label class="btn-upload">Comparativo
-<input id="file1" type="file">
-</label>
+<input type="file" id="file1">
 <div class="bar"><div id="b1" class="bar-fill"></div></div>
-<div id="s1" class="status">Aguardando</div>
+<small>Comparativo de estoque</small>
 </div>
 
 <div class="upload">
-<label class="btn-upload">Apanha
-<input id="file2" type="file">
-</label>
+<input type="file" id="file2">
 <div class="bar"><div id="b2" class="bar-fill"></div></div>
-<div id="s2" class="status">Aguardando</div>
+<small>Apanhas</small>
 </div>
 
 <div class="upload">
-<label class="btn-upload">Pulmão
-<input id="file3" type="file">
-</label>
+<input type="file" id="file3">
 <div class="bar"><div id="b3" class="bar-fill"></div></div>
-<div id="s3" class="status">Aguardando</div>
+<small>Pulmões</small>
 </div>
 
+<!-- AÇÕES -->
+<div style="margin-top:10px">
+<button onclick="exportar()">Excel</button>
+<button onclick="imprimir()">Imprimir</button>
 </div>
 
+<!-- TABELA -->
 <div class="table">
 <table>
 <thead>
 <tr>
-<th>Cód</th><th>Desc</th><th>Local</th><th>Qtd</th><th>Valor</th><th>Apanha</th><th>Pulmão</th>
+<th>Código</th>
+<th>Descrição</th>
+<th>Local</th>
+<th>Qtd Divergente</th>
+<th>Valor Divergente</th>
+<th>Apanha</th>
+<th>Pulmão</th>
 </tr>
 </thead>
 <tbody id="tb"></tbody>
@@ -91,17 +156,25 @@ button{background:#111827;border:1px solid #1f2937;color:#fff;padding:10px;borde
 
 <script>
 
-let base=[],view=[];
-let apanha={},pulmao={};
+let base = [];
+let apanha = {};
+let pulmao = {};
 
-const sleep = () => new Promise(r=>setTimeout(r,0));
+let view = [];
 
-function norm(v){
-return String(v||'').trim().replace(/\s/g,'');
+/* =========================
+UTIL NÚMERO BR
+========================= */
+function parseBR(v){
+return parseFloat(
+String(v || "0")
+.replace(/\./g,'')
+.replace(',','.')
+) || 0;
 }
 
 /* =========================
-COMPARATIVO ULTRA FIX (SEM 99%)
+UPLOAD COMPARATIVO
 ========================= */
 document.getElementById('file1').addEventListener('change', async e=>{
 
@@ -109,45 +182,31 @@ const text = await e.target.files[0].text();
 const lines = text.split(/\r?\n/);
 
 base = [];
-const total = lines.length;
 
-for(let i=1;i<total;i++){
+for(let i=1;i<lines.length;i++){
 
 const c = lines[i].split(';');
-if(c.length<8) continue;
+if(c.length < 10) continue;
 
 base.push({
-codigo:norm(c[0]),
-desc:c[1],
-local:c[2],
-qtd:+(c[6]||0),
-valor:Math.abs(+(c[9]||0))
+codigo: c[0],
+desc: c[1],
+local: c[2],
+qtd: parseBR(c[6]),
+valor: parseBR(c[9])
 });
 
-/* PROGRESSO ESTÁVEL */
 if(i % 500 === 0){
-const pct = Math.floor((i/total)*100);
-
-document.getElementById('b1').style.width=pct+'%';
-document.getElementById('s1').innerText='Processando '+pct+'%';
-
-/* 🔥 EVITA FREEZE DO ÚLTIMO FRAME */
-await sleep();
+document.getElementById('b1').style.width =
+Math.floor((i/lines.length)*100)+'%';
 }
 }
 
-/* 🔥 FORÇA FINALIZAÇÃO REAL DO BROWSER */
-await sleep();
-
-view=[...base];
+view = base;
 render();
 kpi();
 
-/* FINALIZA 100% SEM TRAVAR */
-requestAnimationFrame(()=>{
 document.getElementById('b1').style.width='100%';
-document.getElementById('s1').innerText='Concluído ✔';
-});
 
 });
 
@@ -159,22 +218,20 @@ document.getElementById('file2').addEventListener('change', async e=>{
 const text = await e.target.files[0].text();
 const lines = text.split(/\r?\n/);
 
-apanha={};
+apanha = {};
 
 for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
-if(c.length<6)continue;
+const c = lines[i].split(';');
+if(c.length < 6) continue;
 
-const cod=norm(c[5]);
-if(!cod)continue;
+const cod = c[5];
+if(!cod) continue;
 
-apanha[cod]=apanha[cod]||[];
-apanha[cod].push(1);
+apanha[cod] = (apanha[cod] || 0) + 1;
 }
 
-kpi();
 document.getElementById('b2').style.width='100%';
-document.getElementById('s2').innerText='OK';
+kpi();
 
 });
 
@@ -186,22 +243,20 @@ document.getElementById('file3').addEventListener('change', async e=>{
 const text = await e.target.files[0].text();
 const lines = text.split(/\r?\n/);
 
-pulmao={};
+pulmao = {};
 
 for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
-if(c.length<6)continue;
+const c = lines[i].split(';');
+if(c.length < 6) continue;
 
-const cod=norm(c[5]);
-if(!cod)continue;
+const cod = c[5];
+if(!cod) continue;
 
-pulmao[cod]=pulmao[cod]||[];
-pulmao[cod].push(1);
+pulmao[cod] = (pulmao[cod] || 0) + 1;
 }
 
-kpi();
 document.getElementById('b3').style.width='100%';
-document.getElementById('s3').innerText='OK';
+kpi();
 
 });
 
@@ -209,32 +264,72 @@ document.getElementById('s3').innerText='OK';
 RENDER
 ========================= */
 function render(){
-const tb=document.getElementById('tb');
-tb.innerHTML='';
 
-view.forEach(x=>{
-tb.innerHTML+=`
+const tb = document.getElementById('tb');
+tb.innerHTML = '';
+
+for(let i=0;i<view.length;i++){
+
+const x = view[i];
+
+tb.innerHTML += `
 <tr>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${apanha[x.codigo]?.length||'SEM'}</td>
-<td>${pulmao[x.codigo]?.length||'SEM'}</td>
+<td>${apanha[x.codigo] || 'SEM'}</td>
+<td>${pulmao[x.codigo] || 'SEM'}</td>
 </tr>`;
-});
+}
 }
 
+/* =========================
+KPI
+========================= */
 function kpi(){
-document.getElementById('k1').innerText=base.length;
 
-let a=0,p=0;
-for(let k in apanha)a+=apanha[k].length;
-for(let k in pulmao)p+=pulmao[k].length;
+document.getElementById('k1').innerText = base.length;
 
-document.getElementById('k2').innerText=a;
-document.getElementById('k3').innerText=p;
+let a = 0;
+let p = 0;
+
+for(let k in apanha) a += apanha[k];
+for(let k in pulmao) p += pulmao[k];
+
+document.getElementById('k2').innerText = a;
+document.getElementById('k3').innerText = p;
+
+}
+
+/* =========================
+EXPORT EXCEL
+========================= */
+function exportar(){
+
+const data = view.map(x => ({
+Código: x.codigo,
+Descrição: x.desc,
+Local: x.local,
+Qtd: x.qtd,
+Valor: x.valor,
+Apanha: apanha[x.codigo] || 0,
+Pulmão: pulmao[x.codigo] || 0
+}));
+
+const ws = XLSX.utils.json_to_sheet(data);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "CD107");
+
+XLSX.writeFile(wb, "CD107.xlsx");
+}
+
+/* =========================
+IMPRIMIR
+========================= */
+function imprimir(){
+window.print();
 }
 
 </script>
