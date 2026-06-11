@@ -221,10 +221,15 @@ let base=[],view=[];
 let apanha={},pulmao={};
 
 function norm(v){
-return String(v||'').trim().replace(/\s/g,'').replace(/^0+/,'');
+return String(v||'')
+.trim()
+.replace(/\s/g,'')
+.replace(/^0+/,'');
 }
 
-/* KPI */
+/* =========================
+KPI
+========================= */
 function kpi(){
 document.getElementById('k1').innerText=base.length;
 
@@ -236,23 +241,36 @@ document.getElementById('k2').innerText=a;
 document.getElementById('k3').innerText=p;
 }
 
-/* PROGRESS */
+/* =========================
+PROGRESS
+========================= */
 function prog(bar,status,t,p){
 document.getElementById(bar).style.width=p+'%';
 document.getElementById(status).innerText=t;
 }
 
-/* FILE 1 */
+/* =========================
+COMPARATIVO (OTIMIZADO)
+========================= */
 file1.onchange=e=>{
-prog('b1','s1','Carregando...',20);
+prog('b1','s1','Iniciando...',10);
 
+const file=e.target.files[0];
 const r=new FileReader();
 
 r.onload=ev=>{
-const l=ev.target.result.split(/\r?\n/);
-base=[];
 
-for(let i=1;i<l.length;i++){
+const l=ev.target.result.split(/\r?\n/);
+
+base=[];
+let i=1;
+
+function chunk(){
+
+const end=Math.min(i+2000,l.length);
+
+for(;i<end;i++){
+
 const c=l[i].split(';');
 if(c.length<8)continue;
 
@@ -265,17 +283,27 @@ valor:Math.abs(+(c[9]||0))
 });
 }
 
+prog('b1','s1',`Processando ${Math.round(i/l.length*100)}%`,40+(i/l.length*60));
+
+if(i<l.length){
+setTimeout(chunk,0);
+}else{
 view=[...base];
 render(view);
 kpi();
+prog('b1','s1','Concluído ✔',100);
+}
+}
 
-prog('b1','s1','OK ✔',100);
+chunk();
 };
 
-r.readAsText(e.target.files[0],'latin1');
+r.readAsText(file,'latin1');
 };
 
-/* FILE 2 */
+/* =========================
+APANHA
+========================= */
 file2.onchange=e=>{
 prog('b2','s2','Carregando...',30);
 
@@ -303,7 +331,9 @@ prog('b2','s2','OK ✔',100);
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* FILE 3 */
+/* =========================
+PULMÃO
+========================= */
 file3.onchange=e=>{
 prog('b3','s3','Carregando...',30);
 
@@ -331,8 +361,11 @@ prog('b3','s3','OK ✔',100);
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* RENDER */
+/* =========================
+RENDER
+========================= */
 function render(arr){
+
 const tb=document.getElementById('tb');
 tb.innerHTML='';
 
@@ -350,7 +383,9 @@ tb.innerHTML+=`
 });
 }
 
-/* FILTRO */
+/* =========================
+FILTRO
+========================= */
 function filtrar(){
 
 const a=f1.value.toLowerCase();
@@ -368,14 +403,20 @@ view=base.filter(x=>
 render(view);
 }
 
-/* ORDENAR */
+/* =========================
+ORDENAR
+========================= */
 function ordenar(t){
-if(t=='maior')view.sort((a,b)=>b.valor-a.valor);
-if(t=='menor')view.sort((a,b)=>a.valor-b.valor);
+
+if(t==='maior')view.sort((a,b)=>b.valor-a.valor);
+if(t==='menor')view.sort((a,b)=>a.valor-b.valor);
+
 render(view);
 }
 
-/* EXCEL */
+/* =========================
+EXCEL
+========================= */
 function exportar(){
 
 const data=view.map(x=>({
@@ -394,7 +435,9 @@ XLSX.utils.book_append_sheet(wb,ws,'CD107');
 XLSX.writeFile(wb,'CD107.xlsx');
 }
 
-/* PRINT */
+/* =========================
+PRINT
+========================= */
 function imprimir(){
 window.print();
 }
