@@ -117,6 +117,11 @@ td{
 padding:8px;
 border-bottom:1px solid #1f2937;
 }
+
+.chk{
+transform:scale(1.2);
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -136,19 +141,16 @@ border-bottom:1px solid #1f2937;
 <!-- UPLOADS -->
 <div class="upload">
 <input type="file" id="file1">
-<div class="bar"><div id="b1" class="bar-fill"></div></div>
 <small>Comparativo</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file2">
-<div class="bar"><div id="b2" class="bar-fill"></div></div>
 <small>Apanha</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file3">
-<div class="bar"><div id="b3" class="bar-fill"></div></div>
 <small>Pulmão</small>
 </div>
 
@@ -163,12 +165,18 @@ border-bottom:1px solid #1f2937;
 
 <!-- AÇÕES -->
 <div class="actions">
+
+<button onclick="toggleAll()">Selecionar todos</button>
+<button onclick="clearSel()">Limpar seleção</button>
+
 <button onclick="ordenar('az')">A-Z</button>
 <button onclick="ordenar('za')">Z-A</button>
 <button onclick="ordenar('maior')">Maior valor</button>
 <button onclick="ordenar('menor')">Menor valor</button>
+
 <button onclick="exportar()">Excel</button>
-<button onclick="imprimir()">Imprimir</button>
+<button onclick="imprimir()">Imprimir auditoria</button>
+
 </div>
 
 <!-- TABELA -->
@@ -176,6 +184,7 @@ border-bottom:1px solid #1f2937;
 <table>
 <thead>
 <tr>
+<th>✔</th>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
@@ -197,6 +206,7 @@ let base = [];
 let view = [];
 let apanha = {};
 let pulmao = {};
+let selected = new Set();
 
 function parseBR(v){
 return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
@@ -229,7 +239,6 @@ view = [...base];
 render();
 kpi();
 
-document.getElementById('b1').style.width='100%';
 });
 
 /* =========================
@@ -244,14 +253,12 @@ apanha = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-if(c.length < 6) continue;
-
 const cod = c[5];
-apanha[cod] = (apanha[cod]||0)+1;
+if(cod) apanha[cod]=(apanha[cod]||0)+1;
 }
 
 kpi();
-document.getElementById('b2').style.width='100%';
+
 });
 
 /* =========================
@@ -266,44 +273,83 @@ pulmao = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-if(c.length < 6) continue;
-
 const cod = c[5];
-pulmao[cod] = (pulmao[cod]||0)+1;
+if(cod) pulmao[cod]=(pulmao[cod]||0)+1;
 }
 
 kpi();
-document.getElementById('b3').style.width='100%';
+
 });
+
+/* =========================
+RENDER
+========================= */
+function render(){
+
+let html='';
+
+for(let i=0;i<view.length;i++){
+
+const x=view[i];
+
+html += `
+<tr>
+<td><input class="chk" type="checkbox" onchange="selectItem('${x.codigo}',this.checked)" ${selected.has(x.codigo)?'checked':''}></td>
+<td>${x.codigo}</td>
+<td>${x.desc}</td>
+<td>${x.local}</td>
+<td>${x.qtd}</td>
+<td>${x.valor.toFixed(2)}</td>
+<td>${apanha[x.codigo]||'SEM'}</td>
+<td>${pulmao[x.codigo]||'SEM'}</td>
+</tr>`;
+}
+
+document.getElementById('tb').innerHTML = html;
+}
+
+/* =========================
+SELEÇÃO
+========================= */
+function selectItem(code,checked){
+if(checked) selected.add(code);
+else selected.delete(code);
+}
+
+function toggleAll(){
+view.forEach(x=>selected.add(x.codigo));
+render();
+}
+
+function clearSel(){
+selected.clear();
+render();
+}
 
 /* =========================
 FILTROS
 ========================= */
 function aplicarFiltros(){
 
-const cod = document.getElementById('f_codigo').value.toLowerCase();
-const desc = document.getElementById('f_desc').value.toLowerCase();
-const local = document.getElementById('f_local').value.toLowerCase();
-const min = parseBR(document.getElementById('f_min').value);
-const max = parseBR(document.getElementById('f_max').value);
+const cod=f_codigo.value.toLowerCase();
+const desc=f_desc.value.toLowerCase();
+const local=f_local.value.toLowerCase();
+const min=parseBR(f_min.value);
+const max=parseBR(f_max.value);
 
-view = base.filter(x=>{
-
-return (
-(!cod || x.codigo.toLowerCase().includes(cod)) &&
-(!desc || x.desc.toLowerCase().includes(desc)) &&
-(!local || x.local.toLowerCase().includes(local)) &&
-(!min || x.valor >= min) &&
-(!max || x.valor <= max)
+view=base.filter(x=>
+(!cod||x.codigo.toLowerCase().includes(cod))&&
+(!desc||x.desc.toLowerCase().includes(desc))&&
+(!local||x.local.toLowerCase().includes(local))&&
+(!min||x.valor>=min)&&
+(!max||x.valor<=max)
 );
-
-});
 
 render();
 }
 
 document.querySelectorAll('input').forEach(i=>{
-i.addEventListener('keyup', aplicarFiltros);
+i.addEventListener('keyup',aplicarFiltros);
 });
 
 /* =========================
@@ -320,43 +366,18 @@ render();
 }
 
 /* =========================
-RENDER
-========================= */
-function render(){
-
-let html='';
-
-for(let i=0;i<view.length;i++){
-const x=view[i];
-
-html += `
-<tr>
-<td>${x.codigo}</td>
-<td>${x.desc}</td>
-<td>${x.local}</td>
-<td>${x.qtd}</td>
-<td>${x.valor.toFixed(2)}</td>
-<td>${apanha[x.codigo]||'SEM'}</td>
-<td>${pulmao[x.codigo]||'SEM'}</td>
-</tr>`;
-}
-
-document.getElementById('tb').innerHTML = html;
-}
-
-/* =========================
 KPI
 ========================= */
 function kpi(){
 
-document.getElementById('k1').innerText = base.length;
+k1.innerText=base.length;
 
 let a=0,p=0;
 for(let k in apanha)a+=apanha[k];
 for(let k in pulmao)p+=pulmao[k];
 
-document.getElementById('k2').innerText = a;
-document.getElementById('k3').innerText = p;
+k2.innerText=a;
+k3.innerText=p;
 }
 
 /* =========================
@@ -364,7 +385,9 @@ EXPORT
 ========================= */
 function exportar(){
 
-const data = view.map(x=>({
+const data=view
+.filter(x=>selected.size===0||selected.has(x.codigo))
+.map(x=>({
 Codigo:x.codigo,
 Descricao:x.desc,
 Local:x.local,
@@ -374,17 +397,49 @@ Apanha:apanha[x.codigo]||0,
 Pulmao:pulmao[x.codigo]||0
 }));
 
-const ws = XLSX.utils.json_to_sheet(data);
-const wb = XLSX.utils.book_new();
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"CD107");
 XLSX.writeFile(wb,"CD107.xlsx");
 }
 
 /* =========================
-IMPRIMIR
+IMPRIMIR RELATÓRIO WMS
 ========================= */
 function imprimir(){
-window.print();
+
+const data=view.filter(x=>selected.size===0||selected.has(x.codigo));
+
+let w=window.open('');
+w.document.write(`
+<html>
+<head>
+<title>WMS AUDITORIA</title>
+<style>
+body{font-family:Segoe UI;padding:20px}
+h2{background:#111827;color:#fff;padding:10px}
+.item{border-bottom:1px solid #ccc;margin-bottom:10px;padding:10px}
+</style>
+</head>
+<body>
+<h2>RELATÓRIO WMS AUDITORIA CD-107</h2>
+`);
+
+data.forEach(x=>{
+w.document.write(`
+<div class="item">
+<b>${x.codigo}</b> - ${x.desc}<br>
+Local: ${x.local}<br>
+Qtd: ${x.qtd}<br>
+Valor: ${x.valor}<br>
+Apanha: ${apanha[x.codigo]||'SEM APANHA'}<br>
+Pulmão: ${pulmao[x.codigo]||'SEM PULMÃO'}
+</div>
+`);
+});
+
+w.document.write('</body></html>');
+w.print();
 }
 
 </script>
