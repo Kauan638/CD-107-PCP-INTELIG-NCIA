@@ -170,7 +170,10 @@ let pulmao={};
 NORMALIZAÇÃO
 ========================= */
 function norm(v){
-return String(v||'').trim().replace(/^0+/,'');
+return String(v||'')
+.trim()
+.replace(/\s/g,'')
+.replace(/^0+/,'');
 }
 
 /* =========================
@@ -387,7 +390,11 @@ html+=`
 <p>Qtd: ${x.qtd}</p>
 <p>Valor: ${x.valor}</p>
 
-<p><b>Apanha:</b> ${(apanha[cod]||[]).length ? apanha[cod].join(', ') : 'SEM APANHA'}</p>
+<p><b>Apanha:</b> ${
+apanha[norm(cod)] && apanha[norm(cod)].length
+? apanha[norm(cod)].join(', ')
+: 'SEM APANHA'
+}</p>
 <p><b>Pulmão:</b> ${(pulmao[cod]||[]).length ? pulmao[cod].join(', ') : 'SEM PULMÃO'}</p>
 
 </div>
