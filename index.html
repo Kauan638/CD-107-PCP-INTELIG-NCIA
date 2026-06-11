@@ -42,7 +42,7 @@ border:1px solid #1f2937;
 border-radius:10px;
 }
 
-input,select{
+input{
 padding:10px;
 margin-top:8px;
 background:#111827;
@@ -50,6 +50,13 @@ border:1px solid #1f2937;
 color:#fff;
 border-radius:8px;
 width:100%;
+}
+
+.filters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:8px;
+margin-top:10px;
 }
 
 .actions{
@@ -93,8 +100,6 @@ td{
 padding:8px;
 border-bottom:1px solid #1f2937;
 }
-
-.chk{transform:scale(1.2)}
 </style>
 </head>
 
@@ -110,13 +115,30 @@ border-bottom:1px solid #1f2937;
 <div>🏭 Pulmões: <b id="k3">0</b></div>
 </div>
 
-<div class="upload"><input type="file" id="file1"><small>Comparativo</small></div>
-<div class="upload"><input type="file" id="file2"><small>Apanha</small></div>
-<div class="upload"><input type="file" id="file3"><small>Pulmão</small></div>
+<div class="upload">
+<input type="file" id="file1">
+<small>Comparativo</small>
+</div>
+
+<div class="upload">
+<input type="file" id="file2">
+<small>Apanha</small>
+</div>
+
+<div class="upload">
+<input type="file" id="file3">
+<small>Pulmão</small>
+</div>
+
+<div class="filters">
+<input id="f_codigo" placeholder="Código">
+<input id="f_desc" placeholder="Descrição">
+<input id="f_local" placeholder="Local">
+<input id="f_min" placeholder="Valor mínimo">
+<input id="f_max" placeholder="Valor máximo">
+</div>
 
 <div class="actions">
-<button onclick="toggleAll()">Selecionar todos</button>
-<button onclick="clearSel()">Limpar seleção</button>
 <button onclick="exportar()">Excel</button>
 <button onclick="imprimir()">Imprimir</button>
 </div>
@@ -125,7 +147,6 @@ border-bottom:1px solid #1f2937;
 <table>
 <thead>
 <tr>
-<th>✔</th>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
@@ -143,9 +164,11 @@ border-bottom:1px solid #1f2937;
 
 <script>
 
-let base=[], view=[];
-let apanha={}, pulmao={};
-let selected=new Set();
+let base = [];
+let view = [];
+
+let apanhaMap = {};   // SEQPRODUTO
+let pulmaoMap = {};   // SEQPRODUTO
 
 function parse(v){
 return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
@@ -155,15 +178,16 @@ return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 COMPARATIVO
 ========================= */
 file1.onchange = async e=>{
-const lines=(await e.target.files[0].text()).split(/\r?\n/);
-base=[];
+const lines = (await e.target.files[0].text()).split(/\r?\n/);
+
+base = [];
 
 for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
+const c = lines[i].split(';');
 if(c.length<10) continue;
 
 base.push({
-codigo:c[0]?.trim(),
+codigo:(c[0]||'').trim(),
 desc:c[1],
 local:c[2],
 qtd:parse(c[6]),
@@ -177,43 +201,47 @@ kpi();
 };
 
 /* =========================
-APANHA (CORRIGIDO REAL)
+APANHA (CORRETO)
 ========================= */
 file2.onchange = async e=>{
-const lines=(await e.target.files[0].text()).split(/\r?\n/);
+const lines = (await e.target.files[0].text()).split(/\r?\n/);
 
-apanha={};
+apanhaMap = {};
 
 for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
+const c = lines[i].split(';');
 
-// ⚠️ APANHA usa SEQPRODUTO = coluna 1 ou fallback 0
-const cod=(c[1]||c[0]||'').trim();
+const seq = (c[1]||'').trim(); // SEQPRODUTO
 
-if(cod) apanha[cod]=(apanha[cod]||0)+1;
+if(seq){
+apanhaMap[seq] = (apanhaMap[seq]||0)+1;
+}
 }
 
 kpi();
+render();
 };
 
 /* =========================
-PULMÃO (CORRIGIDO REAL)
+PULMÃO (CORRETO)
 ========================= */
 file3.onchange = async e=>{
-const lines=(await e.target.files[0].text()).split(/\r?\n/);
+const lines = (await e.target.files[0].text()).split(/\r?\n/);
 
-pulmao={};
+pulmaoMap = {};
 
 for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
+const c = lines[i].split(';');
 
-// ⚠️ PULMÃO pode vir vazio → tenta 1º SEQPRODUTO, senão ignora
-const cod=(c[5]||c[1]||'').trim();
+const seq = (c[5]||'').trim(); // SEQPRODUTO
 
-if(cod) pulmao[cod]=(pulmao[cod]||0)+1;
+if(seq){
+pulmaoMap[seq] = (pulmaoMap[seq]||0)+1;
+}
 }
 
 kpi();
+render();
 };
 
 /* =========================
@@ -227,32 +255,18 @@ for(let x of view){
 
 html+=`
 <tr>
-<td><input type="checkbox" onchange="sel('${x.codigo}',this.checked)" ${selected.has(x.codigo)?'checked':''}></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${apanha[x.codigo]||'SEM APANHA'}</td>
-<td>${pulmao[x.codigo]||'SEM PULMÃO'}</td>
+
+<td>${apanhaMap[x.codigo]||'SEM APANHA'}</td>
+<td>${pulmaoMap[x.codigo]||'SEM PULMÃO'}</td>
 </tr>`;
 }
 
 tb.innerHTML=html;
-}
-
-function sel(c,v){
-v?selected.add(c):selected.delete(c);
-}
-
-function toggleAll(){
-view.forEach(x=>selected.add(x.codigo));
-render();
-}
-
-function clearSel(){
-selected.clear();
-render();
 }
 
 /* =========================
@@ -263,8 +277,8 @@ function kpi(){
 k1.innerText=base.length;
 
 let a=0,p=0;
-for(let k in apanha)a+=apanha[k];
-for(let k in pulmao)p+=pulmao[k];
+for(let k in apanhaMap)a+=apanhaMap[k];
+for(let k in pulmaoMap)p+=pulmaoMap[k];
 
 k2.innerText=a;
 k3.innerText=p;
@@ -281,8 +295,8 @@ Descricao:x.desc,
 Local:x.local,
 Qtd:x.qtd,
 Valor:x.valor,
-Apanha:apanha[x.codigo]||0,
-Pulmao:pulmao[x.codigo]||0
+Apanha:apanhaMap[x.codigo]||0,
+Pulmao:pulmaoMap[x.codigo]||0
 }));
 
 const ws=XLSX.utils.json_to_sheet(data);
@@ -297,14 +311,14 @@ IMPRIMIR
 function imprimir(){
 
 let w=window.open('');
-w.document.write(`<h2>RELATÓRIO WMS CD-107</h2>`);
+w.document.write('<h2>RELATÓRIO WMS CD-107</h2>');
 
 view.forEach(x=>{
 w.document.write(`
-<div style="margin-bottom:10px;border-bottom:1px solid #ccc">
+<div style="border-bottom:1px solid #ccc;padding:10px">
 <b>${x.codigo}</b> - ${x.desc}<br>
-Apanha: ${apanha[x.codigo]||'SEM APANHA'}<br>
-Pulmão: ${pulmao[x.codigo]||'SEM PULMÃO'}
+Apanha: ${apanhaMap[x.codigo]||'SEM APANHA'}<br>
+Pulmão: ${pulmaoMap[x.codigo]||'SEM PULMÃO'}
 </div>
 `);
 });
