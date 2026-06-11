@@ -8,69 +8,198 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#0f172a;color:#fff}
-header{padding:15px;background:#111827}
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:#0f172a;
+color:white;
+}
+
+header{
+padding:15px;
+background:#111827;
+font-weight:bold;
+}
+
 .container{padding:15px}
-.box{background:#1e293b;padding:12px;border-radius:10px;margin-top:10px}
-input,button{padding:6px;margin:3px;border-radius:6px;border:none}
-button{background:#2563eb;color:#fff;cursor:pointer}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{border-bottom:1px solid #334155;padding:6px}
+
+.box{
+background:#1e293b;
+padding:12px;
+border-radius:10px;
+margin-top:10px;
+}
+
+.kpi{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.kpi div{
+background:#0b1220;
+padding:10px;
+border-radius:8px;
+font-size:13px;
+}
+
+.upload-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:12px;
+margin-top:10px;
+}
+
+.upload-card{
+background:#0b1220;
+border:1px solid #1f2937;
+padding:12px;
+border-radius:10px;
+transition:.2s;
+}
+
+.upload-card:hover{
+border-color:#2563eb;
+transform:scale(1.02);
+}
+
+.upload-title{
+font-size:13px;
+color:#94a3b8;
+margin-bottom:6px;
+}
+
+.upload-card input{
+width:100%;
+padding:8px;
+background:#111827;
+color:white;
+border-radius:6px;
+border:1px solid #334155;
+}
+
+.bar{
+height:6px;
+background:#1f2937;
+border-radius:10px;
+margin-top:6px;
+overflow:hidden;
+}
+
+.bar-fill{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#2563eb,#22c55e);
+transition:.3s;
+}
+
+.status{
+font-size:11px;
+color:#94a3b8;
+margin-top:4px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
+
+th,td{
+border-bottom:1px solid #334155;
+padding:6px;
+}
+
 th{background:#111827}
-small{color:#94a3b8}
-.critico{color:#ef4444;font-weight:bold}
-.kpi{display:flex;gap:15px;flex-wrap:wrap}
-.kpi div{background:#0b1220;padding:10px;border-radius:8px}
+
+button{
+background:#2563eb;
+color:white;
+border:none;
+padding:6px 10px;
+margin:3px;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{opacity:.8}
+
 </style>
 </head>
 
 <body>
 
-<header>
-<h2>📊 CD-107 PCP INTELIGÊNCIA PRO</h2>
-</header>
+<header>📊 CD-107 PCP INTELIGÊNCIA PRO</header>
 
 <div class="container">
 
 <!-- KPI -->
 <div class="box kpi">
-<div>📦 Total Itens: <b id="k_total">0</b></div>
-<div>📍 Apanhas: <b id="k_apanha">0</b></div>
-<div>🏭 Pulmões: <b id="k_pulmao">0</b></div>
+<div>📦 Itens: <b id="k1">0</b></div>
+<div>📍 Apanhas: <b id="k2">0</b></div>
+<div>🏭 Pulmões: <b id="k3">0</b></div>
 </div>
 
-<!-- UPLOADS -->
+<!-- UPLOAD -->
 <div class="box">
+
 <h3>Uploads</h3>
-<input type="file" id="file1"> Comparativo<br>
-<input type="file" id="file2"> Apanha<br>
-<input type="file" id="file3"> Pulmão<br>
+
+<div class="upload-grid">
+
+<div class="upload-card">
+<div class="upload-title">📊 Comparativo</div>
+<input type="file" id="file1">
+<div class="bar"><div id="b1" class="bar-fill"></div></div>
+<div class="status" id="s1">Aguardando...</div>
+</div>
+
+<div class="upload-card">
+<div class="upload-title">📍 Apanha</div>
+<input type="file" id="file2">
+<div class="bar"><div id="b2" class="bar-fill"></div></div>
+<div class="status" id="s2">Aguardando...</div>
+</div>
+
+<div class="upload-card">
+<div class="upload-title">🏭 Pulmão</div>
+<input type="file" id="file3">
+<div class="bar"><div id="b3" class="bar-fill"></div></div>
+<div class="status" id="s3">Aguardando...</div>
+</div>
+
+</div>
 </div>
 
 <!-- FILTROS -->
 <div class="box">
-<input id="f_codigo" placeholder="Código" oninput="filtrar()">
-<input id="f_desc" placeholder="Descrição" oninput="filtrar()">
-<input id="f_local" placeholder="Local" oninput="filtrar()">
-<input id="f_valor" placeholder="Valor mín" oninput="filtrar()">
+
+<input id="f1" placeholder="Código" oninput="filtrar()">
+<input id="f2" placeholder="Descrição" oninput="filtrar()">
+<input id="f3" placeholder="Local" oninput="filtrar()">
+<input id="f4" placeholder="Valor mín" oninput="filtrar()">
+
 </div>
 
 <!-- BOTÕES -->
 <div class="box">
+
 <button onclick="ordenar('maior')">Maior valor</button>
 <button onclick="ordenar('menor')">Menor valor</button>
-<button onclick="exportarExcel()">Excel</button>
+<button onclick="exportar()">Excel</button>
 <button onclick="imprimir()">Imprimir</button>
+
 </div>
 
 <!-- TABELA -->
 <div class="box">
+
 <table>
 <thead>
 <tr>
-<th>Sel</th>
-<th>Código</th>
-<th>Descrição</th>
+<th>Cód</th>
+<th>Desc</th>
 <th>Local</th>
 <th>Qtd</th>
 <th>Valor</th>
@@ -78,215 +207,196 @@ small{color:#94a3b8}
 <th>Pulmão</th>
 </tr>
 </thead>
+
 <tbody id="tb"></tbody>
 </table>
+
 </div>
 
 </div>
 
 <script>
 
-let base=[];
-let view=[];
-let apanha={};
-let pulmao={};
+let base=[],view=[];
+let apanha={},pulmao={};
 
 function norm(v){
 return String(v||'').trim().replace(/\s/g,'').replace(/^0+/,'');
 }
 
-/* =====================
-COMPARATIVO (ROBUSTO)
-===================== */
-file1.onchange=e=>{
-const r=new FileReader();
-r.onload=ev=>{
-const lines=ev.target.result.split(/\r?\n/);
+/* KPI */
+function kpi(){
+document.getElementById('k1').innerText=base.length;
 
+let a=0,p=0;
+for(let k in apanha)a+=apanha[k].length;
+for(let k in pulmao)p+=pulmao[k].length;
+
+document.getElementById('k2').innerText=a;
+document.getElementById('k3').innerText=p;
+}
+
+/* PROGRESS */
+function prog(bar,status,t,p){
+document.getElementById(bar).style.width=p+'%';
+document.getElementById(status).innerText=t;
+}
+
+/* FILE 1 */
+file1.onchange=e=>{
+prog('b1','s1','Carregando...',20);
+
+const r=new FileReader();
+
+r.onload=ev=>{
+const l=ev.target.result.split(/\r?\n/);
 base=[];
 
-for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
-if(c.length<8) continue;
-
-const codigo = norm(c[0]);
-if(!codigo) continue;
+for(let i=1;i<l.length;i++){
+const c=l[i].split(';');
+if(c.length<8)continue;
 
 base.push({
-codigo,
-desc:c[1]||'',
-local:c[2]||'',
-qtd:parseFloat((c[6]||'0').replace(',','.'))||0,
-valor:Math.abs(parseFloat((c[9]||'0').replace(',','.'))||0)
+codigo:norm(c[0]),
+desc:c[1],
+local:c[2],
+qtd:+(c[6]||0),
+valor:Math.abs(+(c[9]||0))
 });
 }
 
 view=[...base];
-updateKPIs();
 render(view);
+kpi();
+
+prog('b1','s1','OK ✔',100);
 };
+
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =====================
-APANHA
-===================== */
+/* FILE 2 */
 file2.onchange=e=>{
+prog('b2','s2','Carregando...',30);
+
 const r=new FileReader();
+
 r.onload=ev=>{
-const lines=ev.target.result.split(/\r?\n/);
+const l=ev.target.result.split(/\r?\n/);
 apanha={};
 
-for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
-if(c.length<6) continue;
+for(let i=1;i<l.length;i++){
+const c=l[i].split(';');
+if(c.length<6)continue;
 
 const cod=norm(c[5]);
-if(!cod) continue;
+if(!cod)continue;
 
-if(!apanha[cod]) apanha[cod]=[];
+if(!apanha[cod])apanha[cod]=[];
 apanha[cod].push(c[0]);
 }
-updateKPIs();
-render(view);
+
+kpi();
+prog('b2','s2','OK ✔',100);
 };
+
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =====================
-PULMÃO
-===================== */
+/* FILE 3 */
 file3.onchange=e=>{
+prog('b3','s3','Carregando...',30);
+
 const r=new FileReader();
+
 r.onload=ev=>{
-const lines=ev.target.result.split(/\r?\n/);
+const l=ev.target.result.split(/\r?\n/);
 pulmao={};
 
-for(let i=1;i<lines.length;i++){
-const c=lines[i].split(';');
-if(c.length<5) continue;
+for(let i=1;i<l.length;i++){
+const c=l[i].split(';');
+if(c.length<6)continue;
 
 const cod=norm(c[5]);
-if(!cod) continue;
+if(!cod)continue;
 
-if(!pulmao[cod]) pulmao[cod]=[];
+if(!pulmao[cod])pulmao[cod]=[];
 pulmao[cod].push(1);
 }
-updateKPIs();
-render(view);
+
+kpi();
+prog('b3','s3','OK ✔',100);
 };
+
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =====================
-KPIs
-===================== */
-function updateKPIs(){
-
-document.getElementById('k_total').innerText=base.length;
-
-let a=0;
-for(let k in apanha) a += apanha[k].length;
-document.getElementById('k_apanha').innerText=a;
-
-let p=0;
-for(let k in pulmao) p += pulmao[k].length;
-document.getElementById('k_pulmao').innerText=p;
-}
-
-/* =====================
-RENDER
-===================== */
-function render(list){
-
+/* RENDER */
+function render(arr){
 const tb=document.getElementById('tb');
 tb.innerHTML='';
 
-list.forEach(x=>{
-
-const ap=apanha[x.codigo]||[];
-const pu=pulmao[x.codigo]||[];
-
+arr.forEach(x=>{
 tb.innerHTML+=`
 <tr>
-<td><input type="checkbox" value="${x.codigo}"></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${ap.length?ap.length:'SEM APANHA'}</td>
-<td>${pu.length}</td>
-</tr>
-`;
+<td>${apanha[x.codigo]?.length||'SEM'}</td>
+<td>${pulmao[x.codigo]?.length||0}</td>
+</tr>`;
 });
 }
 
-/* =====================
-FILTRO
-===================== */
+/* FILTRO */
 function filtrar(){
 
-const c=f_codigo.value.toLowerCase();
-const d=f_desc.value.toLowerCase();
-const l=f_local.value.toLowerCase();
-const v=parseFloat(f_valor.value)||0;
+const a=f1.value.toLowerCase();
+const b=f2.value.toLowerCase();
+const c=f3.value.toLowerCase();
+const d=+f4.value||0;
 
 view=base.filter(x=>
-(!c||x.codigo.includes(c))&&
-(!d||x.desc.toLowerCase().includes(d))&&
-(!l||x.local.toLowerCase().includes(l))&&
-(!v||x.valor>=v)
+(!a||x.codigo.includes(a))&&
+(!b||x.desc.toLowerCase().includes(b))&&
+(!c||x.local.toLowerCase().includes(c))&&
+(!d||x.valor>=d)
 );
 
 render(view);
 }
 
-/* =====================
-ORDENAR
-===================== */
-function ordenar(tipo){
-
-if(tipo==='maior')
-view.sort((a,b)=>b.valor-a.valor);
-
-if(tipo==='menor')
-view.sort((a,b)=>a.valor-b.valor);
-
+/* ORDENAR */
+function ordenar(t){
+if(t=='maior')view.sort((a,b)=>b.valor-a.valor);
+if(t=='menor')view.sort((a,b)=>a.valor-b.valor);
 render(view);
 }
 
-/* =====================
-PRINT SIMPLES
-===================== */
-function imprimir(){
+/* EXCEL */
+function exportar(){
 
-window.print();
-}
-
-/* =====================
-EXCEL
-===================== */
-function exportarExcel(){
-
-const sel=[...document.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
-
-const data=sel.map(c=>{
-const x=base.find(b=>b.codigo===c);
-
-return{
-Codigo:c,
-Descricao:x?.desc,
-Apanha:(apanha[c]||[]).length,
-Pulmao:(pulmao[c]||[]).length,
-Valor:x?.valor
-};
-});
+const data=view.map(x=>({
+Codigo:x.codigo,
+Desc:x.desc,
+Local:x.local,
+Qtd:x.qtd,
+Valor:x.valor,
+Apanha:(apanha[x.codigo]||[]).length,
+Pulmao:(pulmao[x.codigo]||[]).length
+}));
 
 const ws=XLSX.utils.json_to_sheet(data);
 const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Relatorio");
-XLSX.writeFile(wb,"relatorio.xlsx");
+XLSX.utils.book_append_sheet(wb,ws,'CD107');
+XLSX.writeFile(wb,'CD107.xlsx');
+}
+
+/* PRINT */
+function imprimir(){
+window.print();
 }
 
 </script>
