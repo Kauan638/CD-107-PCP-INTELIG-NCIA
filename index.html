@@ -17,7 +17,6 @@ color:white;
 display:flex;
 }
 
-/* SIDEBAR */
 .sidebar{
 width:260px;
 background:#111827;
@@ -26,10 +25,9 @@ height:100vh;
 overflow:auto;
 }
 
-.sidebar h2{
-font-size:13px;
-color:#94a3b8;
-margin-top:15px;
+.main{
+flex:1;
+padding:20px;
 }
 
 .btn{
@@ -39,20 +37,12 @@ margin:5px 0;
 background:#1e293b;
 border:none;
 color:white;
-cursor:pointer;
 border-radius:8px;
+cursor:pointer;
 text-align:left;
 }
 
 .btn:hover{background:#2563eb}
-
-/* MAIN */
-.main{
-flex:1;
-padding:20px;
-}
-
-h1{margin-top:0}
 
 table{
 width:100%;
@@ -68,65 +58,11 @@ border-bottom:1px solid #334155;
 
 tr:hover{background:#1e293b}
 
-/* FILTERS */
-.filters{
-display:flex;
-gap:6px;
-flex-wrap:wrap;
-margin-top:10px;
-}
-
 .filters input{
 padding:6px;
+margin:3px;
+border-radius:6px;
 border:none;
-border-radius:6px;
-outline:none;
-}
-
-/* MODAL */
-.modal{
-position:fixed;
-top:0;left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.7);
-display:none;
-align-items:center;
-justify-content:center;
-}
-
-.modal-content{
-background:#111827;
-padding:20px;
-width:70%;
-border-radius:10px;
-max-height:90vh;
-overflow:auto;
-}
-
-.section{
-background:#1e293b;
-padding:10px;
-margin-bottom:10px;
-border-radius:8px;
-}
-
-/* MAPA */
-.box-cd{
-background:#1e293b;
-padding:10px;
-border-radius:6px;
-font-size:11px;
-cursor:pointer;
-text-align:center;
-}
-
-.box-cd:hover{background:#2563eb}
-
-/* PRINT */
-@media print{
-.sidebar,button,input{display:none !important;}
-.main{width:100%}
 }
 
 </style>
@@ -134,116 +70,61 @@ text-align:center;
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
 
-<h2>📥 Uploads</h2>
-
+<h3>📥 Uploads</h3>
 <input type="file" id="file1">
 <input type="file" id="file2">
 <input type="file" id="file3">
 
-<button class="btn" onclick="exportarExcel()">📤 Exportar Excel</button>
+<button class="btn" onclick="exportarExcel()">📤 Excel</button>
 <button class="btn" onclick="imprimirRelatorio()">🖨️ Imprimir Relatório</button>
-<button class="btn" onclick="abrirMapaCD()">🗺️ Mapa do CD</button>
 
-<h2>📊 Status</h2>
-<div id="status"></div>
+<h3>🔃 Ordenação</h3>
 
-<h2>🔃 Ordenação</h2>
-
-<button class="btn" onclick="ordenar('codigo')">Código A→Z</button>
-<button class="btn" onclick="ordenar('codigoDesc')">Código Z→A</button>
-<button class="btn" onclick="ordenar('desc')">Descrição A→Z</button>
-<button class="btn" onclick="ordenar('descDesc')">Descrição Z→A</button>
-<button class="btn" onclick="ordenar('local')">Local A→Z</button>
-<button class="btn" onclick="ordenar('localDesc')">Local Z→A</button>
-<button class="btn" onclick="ordenar('valor')">Maior Valor</button>
-<button class="btn" onclick="ordenar('valorDesc')">Menor Valor</button>
+<button class="btn" onclick="ordenar('valor')">Maior valor</button>
+<button class="btn" onclick="ordenar('valorDesc')">Menor valor</button>
 
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-<h1>CD-107 WMS Auditoria</h1>
+<h2>CD-107 WMS Auditoria</h2>
 
-<!-- FILTROS -->
 <div class="filters">
 
-<input id="f_codigo" placeholder="Código" oninput="filtrarTabela()">
-<input id="f_desc" placeholder="Descrição" oninput="filtrarTabela()">
-<input id="f_local" placeholder="Local" oninput="filtrarTabela()">
-<input id="f_qtd" placeholder="Qtd min" oninput="filtrarTabela()">
-<input id="f_valor" placeholder="Valor min" oninput="filtrarTabela()">
-
-<!-- NOVO FILTRO -->
-<input id="f_pulmao" placeholder="Nº pulmões exato" oninput="filtrarTabela()">
+<input id="f_codigo" placeholder="Código" oninput="filtrar()">
+<input id="f_desc" placeholder="Descrição" oninput="filtrar()">
+<input id="f_pulmao" placeholder="Nº pulmões" oninput="filtrar()">
 
 </div>
 
 <table>
 <thead>
 <tr>
-<th><input type="checkbox" onclick="toggleAll(this)"></th>
+<th><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
-<th>Qtd</th>
 <th>Valor</th>
 <th>Pulmões</th>
 </tr>
 </thead>
-
 <tbody id="tb"></tbody>
 </table>
 
 </div>
 
-<!-- MODAL PRODUTO -->
-<div class="modal" id="modal" onclick="this.style.display='none'">
-<div class="modal-content" onclick="event.stopPropagation()">
-
-<h2 id="title"></h2>
-
-<div class="section">
-<h3>📍 Apanha</h3>
-<div id="apanha"></div>
-</div>
-
-<div class="section">
-<h3>🏭 Pulmão</h3>
-<div id="pulmao"></div>
-</div>
-
-<div class="section">
-<h3>📊 Dados</h3>
-<div id="div"></div>
-</div>
-
-</div>
-</div>
-
-<!-- MAPA CD -->
-<div class="modal" id="mapaCD" onclick="this.style.display='none'">
-<div class="modal-content" style="width:90%;height:90%;overflow:auto">
-
-<h2>🗺️ MAPA DO CD</h2>
-<div id="gridCD" style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"></div>
-
-</div>
-</div>
-
 <script>
 
-let comparativo=[];
+let dados=[];
 let apanha={};
 let pulmao={};
-let tabelaAtual=[];
+let base=[];
 
-/* PARSER */
-function parseBR(v){
-return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0;
+/* NORMALIZAÇÃO */
+function norm(v){
+return String(v||'').trim().replace(/^0+/,'');
 }
 
 /* FILE 1 */
@@ -251,21 +132,20 @@ file1.onchange=e=>{
 const r=new FileReader();
 r.onload=ev=>{
 const lines=ev.target.result.split(/\r?\n/);
-comparativo=[];
+dados=[];
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
 if(c.length<10)continue;
-comparativo.push({
-codigo:c[0],
+
+dados.push({
+codigo:norm(c[0]),
 desc:c[1],
 local:c[2],
-qtd:parseBR(c[6]),
-valor:parseBR(c[9])
+valor:parseFloat(String(c[9]).replace(',','.'))||0
 });
 }
-tabelaAtual=comparativo;
-render(comparativo);
-status();
+base=dados;
+render(dados);
 };
 r.readAsText(e.target.files[0],'latin1');
 };
@@ -278,11 +158,11 @@ const lines=ev.target.result.split(/\r?\n/);
 apanha={};
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
-if(c.length<3)continue;
-const cod=c[5];
-const end=c[0];
+if(c.length<6)continue;
+
+const cod=norm(c[5]);
 if(!apanha[cod])apanha[cod]=[];
-apanha[cod].push(end);
+apanha[cod].push(c[0]);
 }
 };
 r.readAsText(e.target.files[0],'latin1');
@@ -297,9 +177,10 @@ pulmao={};
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
 if(c.length<7)continue;
-const cod=c[5];
+
+const cod=norm(c[5]);
 if(!pulmao[cod])pulmao[cod]=[];
-pulmao[cod].push({endereco:`${c[1]}-${c[2]}-${c[3]}-${c[4]}`,status:c[8]});
+pulmao[cod].push(c[1]+'-'+c[2]+'-'+c[3]+'-'+c[4]);
 }
 };
 r.readAsText(e.target.files[0],'latin1');
@@ -307,156 +188,141 @@ r.readAsText(e.target.files[0],'latin1');
 
 /* RENDER */
 function render(list){
+
+const tb=document.getElementById('tb');
 tb.innerHTML='';
+
 list.forEach(x=>{
 const tr=document.createElement('tr');
-
-/* FIX CHECKBOX CLICK */
-tr.addEventListener('click',e=>{
-if(e.target.type==='checkbox')return;
-open(x.codigo);
-});
 
 tr.innerHTML=`
 <td><input type="checkbox" class="chk" value="${x.codigo}"></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
-<td>${x.qtd}</td>
 <td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
 <td>${(pulmao[x.codigo]||[]).length}</td>
 `;
 
 tb.appendChild(tr);
 });
+
 }
 
-/* FILTER */
-function filtrarTabela(){
+/* FILTRO */
+function filtrar(){
 
 const c=f_codigo.value.toLowerCase();
 const d=f_desc.value.toLowerCase();
-const l=f_local.value.toLowerCase();
-const q=parseFloat(f_qtd.value)||null;
-const v=parseFloat(f_valor.value)||null;
 const p=parseInt(f_pulmao.value)||null;
 
-const f=comparativo.filter(x=>{
+const f=base.filter(x=>{
 
-const qtdPulmao=(pulmao[x.codigo]||[]).length;
+const qtd=(pulmao[x.codigo]||[]).length;
 
 return (
 (!c||x.codigo.includes(c)) &&
 (!d||x.desc.toLowerCase().includes(d)) &&
-(!l||x.local.toLowerCase().includes(l)) &&
-(!q||x.qtd>=q) &&
-(!v||x.valor>=v) &&
-(!p||qtdPulmao===p)
+(!p||qtd==p)
 );
 
 });
 
-tabelaAtual=f;
 render(f);
 }
 
-/* SORT */
+/* TOGGLE ALL */
+function toggleAll(el){
+
+document.querySelectorAll('.chk').forEach(cb=>{
+cb.checked=el.checked;
+});
+
+}
+
+/* ORDENAR */
 function ordenar(t){
-let d=[...tabelaAtual];
-if(t==='codigo')d.sort((a,b)=>a.codigo.localeCompare(b.codigo));
-if(t==='codigoDesc')d.sort((a,b)=>b.codigo.localeCompare(a.codigo));
-if(t==='desc')d.sort((a,b)=>a.desc.localeCompare(b.desc));
-if(t==='descDesc')d.sort((a,b)=>b.desc.localeCompare(a.desc));
-if(t==='local')d.sort((a,b)=>a.local.localeCompare(b.local));
-if(t==='localDesc')d.sort((a,b)=>b.local.localeCompare(a.local));
+
+let d=[...base];
+
 if(t==='valor')d.sort((a,b)=>b.valor-a.valor);
 if(t==='valorDesc')d.sort((a,b)=>a.valor-b.valor);
+
 render(d);
 }
 
-/* MODAL */
-function open(cod){
-const c=comparativo.find(x=>x.codigo==cod);
-modal.style.display='flex';
-title.innerText=`${cod} - ${c.desc}`;
-apanha.innerHTML=(apanha[cod]||[]).join('<br>')||'Sem apanha';
-pulmao.innerHTML=(pulmao[cod]||[]).map(x=>x.endereco).join('<br>')||'Sem pulmão';
-div.innerHTML=`Qtd: ${c.qtd}<br>Valor: ${c.valor}`;
-}
-
-/* STATUS */
-function status(){
-status.innerHTML=
-`Itens: ${comparativo.length}<br>
-Apanha: ${Object.keys(apanha).length}<br>
-Pulmão: ${Object.keys(pulmao).length}`;
-}
-
-/* EXCEL */
+/* EXPORT EXCEL */
 function exportarExcel(){
+
 const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+
 if(!sel.length)return alert('Selecione itens');
 
 const data=sel.map(cod=>{
-const c=comparativo.find(x=>x.codigo==cod);
+const x=base.find(i=>i.codigo==cod);
+
 return{
 Codigo:cod,
-Descricao:c.desc,
-Local:c.local,
-Qtd:c.qtd,
-Valor:c.valor,
+Descricao:x.desc,
+Local:x.local,
+Valor:x.valor,
+Pulmoes:(pulmao[cod]||[]).length,
 Apanha:(apanha[cod]||[]).join('|'),
-Pulmao:(pulmao[cod]||[]).map(x=>x.endereco).join('|')
+Pulmao:(pulmao[cod]||[]).join('|')
 };
 });
 
 const ws=XLSX.utils.json_to_sheet(data);
 const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,'Auditoria');
-XLSX.writeFile(wb,'auditoria.xlsx');
+XLSX.utils.book_append_sheet(wb,ws,'Relatorio');
+XLSX.writeFile(wb,'relatorio.xlsx');
 }
 
-/* PRINT */
+/* IMPRESSÃO CORRIGIDA */
 function imprimirRelatorio(){
-const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
-if(!sel.length)return alert('Selecione itens');
 
-let html='<h1>RELATÓRIO WMS</h1><hr>';
+const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+
+if(!sel.length){
+alert('Selecione itens');
+return;
+}
+
+let win=window.open('','_blank');
+
+let html=`
+<html>
+<head>
+<title>Relatório WMS</title>
+<style>
+body{font-family:Arial;padding:20px}
+.item{border:1px solid #ccc;margin:10px 0;padding:10px}
+h2{background:#eee;padding:10px}
+</style>
+</head>
+<body>
+<h1>RELATÓRIO WMS AUDITORIA</h1>
+`;
 
 sel.forEach(cod=>{
-const c=comparativo.find(x=>x.codigo==cod);
+const x=base.find(i=>i.codigo==cod);
+
 html+=`
-<div style="border:1px solid #ccc;padding:10px;margin:10px 0">
-<h3>${cod} - ${c.desc}</h3>
-<p>Local: ${c.local}</p>
-<p>Qtd: ${c.qtd}</p>
-<p>Valor: ${c.valor}</p>
+<div class="item">
+<h2>${cod} - ${x.desc}</h2>
+<p>Local: ${x.local}</p>
+<p>Valor: ${x.valor}</p>
 <p>Apanha: ${(apanha[cod]||[]).join(', ')}</p>
-<p>Pulmão: ${(pulmao[cod]||[]).map(x=>x.endereco).join(', ')}</p>
-</div>`;
+<p>Pulmão: ${(pulmao[cod]||[]).join(', ')}</p>
+</div>
+`;
 });
 
-const w=window.open();
-w.document.write(html);
-w.print();
-}
+html+=`</body></html>`;
 
-/* MAPA CD */
-function abrirMapaCD(){
-mapaCD.style.display='flex';
-gridCD.innerHTML='';
-const map={};
-comparativo.forEach(x=>{
-if(!map[x.local])map[x.local]=[];
-map[x.local].push(x);
-});
-Object.keys(map).forEach(l=>{
-const div=document.createElement('div');
-div.className='box-cd';
-div.innerHTML=`${l}<br>${map[l].length}`;
-div.onclick=()=>alert(map[l].map(p=>p.codigo+' '+p.desc).join('\n'));
-gridCD.appendChild(div);
-});
+win.document.write(html);
+win.document.close();
+win.print();
 }
 
 </script>
