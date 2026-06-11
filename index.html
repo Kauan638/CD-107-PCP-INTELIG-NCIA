@@ -3,34 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS Intelligence PRO</title>
+<title>CD-107 WMS Intelligence FINAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Segoe UI;
-}
-
 body{
+margin:0;
+font-family:Segoe UI;
 background:#0b1220;
 color:#e5e7eb;
 }
 
 header{
-padding:16px;
+padding:14px;
 background:#111827;
-border-bottom:1px solid #1f2937;
 position:sticky;
 top:0;
+border-bottom:1px solid #1f2937;
 }
 
 .container{
-padding:16px;
+padding:14px;
 max-width:1400px;
 margin:auto;
 }
@@ -38,7 +33,7 @@ margin:auto;
 /* KPI */
 .kpi{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
 gap:10px;
 margin-top:10px;
 }
@@ -60,15 +55,9 @@ margin-top:12px;
 
 .upload-card{
 background:#0f172a;
-padding:14px;
 border:1px solid #1f2937;
+padding:14px;
 border-radius:12px;
-}
-
-.upload-title{
-font-size:13px;
-color:#94a3b8;
-margin-bottom:8px;
 }
 
 .upload-btn{
@@ -78,11 +67,9 @@ background:#2563eb;
 color:white;
 border-radius:8px;
 cursor:pointer;
-font-size:13px;
 text-align:center;
+font-size:13px;
 }
-
-.upload-btn:hover{background:#1d4ed8}
 
 input[type=file]{display:none}
 
@@ -98,7 +85,7 @@ overflow:hidden;
 height:100%;
 width:0%;
 background:linear-gradient(90deg,#2563eb,#22c55e);
-transition:.3s;
+transition:.2s;
 }
 
 .status{
@@ -107,7 +94,7 @@ color:#9ca3af;
 margin-top:5px;
 }
 
-/* FILTROS */
+/* FILTERS */
 .filters{
 margin-top:14px;
 display:grid;
@@ -123,12 +110,12 @@ border-radius:8px;
 color:white;
 }
 
-/* BOTÕES */
+/* BUTTONS */
 .actions{
 margin-top:10px;
 display:flex;
-flex-wrap:wrap;
 gap:8px;
+flex-wrap:wrap;
 }
 
 button{
@@ -140,14 +127,16 @@ border-radius:8px;
 cursor:pointer;
 }
 
-button:hover{border-color:#2563eb}
+button:hover{
+border-color:#2563eb;
+}
 
-/* TABELA */
+/* TABLE */
 .table{
 margin-top:12px;
 overflow:auto;
-border:1px solid #1f2937;
 border-radius:10px;
+border:1px solid #1f2937;
 }
 
 table{
@@ -159,9 +148,9 @@ font-size:12px;
 
 th{
 background:#111827;
-padding:10px;
 position:sticky;
 top:0;
+padding:10px;
 }
 
 td{
@@ -174,7 +163,7 @@ border-bottom:1px solid #1f2937;
 
 <body>
 
-<header>📊 CD-107 WMS INTELLIGENCE PRO</header>
+<header>📊 CD-107 WMS INTELLIGENCE FINAL</header>
 
 <div class="container">
 
@@ -189,8 +178,7 @@ border-bottom:1px solid #1f2937;
 <div class="upload-grid">
 
 <div class="upload-card">
-<div class="upload-title">Comparativo de Estoque</div>
-<label class="upload-btn">📁 Upload Comparativo
+<label class="upload-btn">📁 Comparativo
 <input id="file1" type="file">
 </label>
 <div class="bar"><div id="b1" class="bar-fill"></div></div>
@@ -198,8 +186,7 @@ border-bottom:1px solid #1f2937;
 </div>
 
 <div class="upload-card">
-<div class="upload-title">Apanha</div>
-<label class="upload-btn">📍 Upload Apanha
+<label class="upload-btn">📍 Apanha
 <input id="file2" type="file">
 </label>
 <div class="bar"><div id="b2" class="bar-fill"></div></div>
@@ -207,8 +194,7 @@ border-bottom:1px solid #1f2937;
 </div>
 
 <div class="upload-card">
-<div class="upload-title">Pulmão</div>
-<label class="upload-btn">🏭 Upload Pulmão
+<label class="upload-btn">🏭 Pulmão
 <input id="file3" type="file">
 </label>
 <div class="bar"><div id="b3" class="bar-fill"></div></div>
@@ -217,7 +203,7 @@ border-bottom:1px solid #1f2937;
 
 </div>
 
-<!-- FILTROS -->
+<!-- FILTERS -->
 <div class="filters">
 <input id="f1" placeholder="Código">
 <input id="f2" placeholder="Descrição">
@@ -225,7 +211,6 @@ border-bottom:1px solid #1f2937;
 <input id="f4" placeholder="Valor mínimo">
 </div>
 
-<!-- BOTÕES -->
 <div class="actions">
 <button onclick="ordenar('maior')">⬆ Maior valor</button>
 <button onclick="ordenar('menor')">⬇ Menor valor</button>
@@ -233,7 +218,6 @@ border-bottom:1px solid #1f2937;
 <button onclick="imprimir()">🖨 Imprimir</button>
 </div>
 
-<!-- TABELA -->
 <div class="table">
 <table>
 <thead>
@@ -259,36 +243,42 @@ let base=[],view=[];
 let apanha={},pulmao={};
 
 function norm(v){
-return String(v||'').trim().replace(/\s/g,'').replace(/^0+/,'');
+return String(v||'').trim().replace(/\s/g,'');
 }
 
-/* =====================
-EVENTOS (CORRIGIDO)
-===================== */
-document.getElementById('file1').addEventListener('change',loadComparativo);
-document.getElementById('file2').addEventListener('change',loadApanha);
-document.getElementById('file3').addEventListener('change',loadPulmao);
+/* =========================
+PROGRESS (REAL FIX)
+========================= */
+function prog(idBar,idStatus,text,p){
+document.getElementById(idBar).style.width=p+'%';
+document.getElementById(idStatus).innerText=text;
+}
 
-/* =====================
-COMPARATIVO
-===================== */
-function loadComparativo(e){
+/* =========================
+COMPARATIVO (100% FIX)
+========================= */
+document.getElementById('file1').addEventListener('change',function(e){
 
 const file=e.target.files[0];
-const r=new FileReader();
+const reader=new FileReader();
 
-r.onload=ev=>{
-const l=ev.target.result.split(/\r?\n/);
+prog('b1','s1','Lendo arquivo...',10);
+
+reader.onload=function(ev){
+
+const lines=ev.target.result.split(/\r?\n/);
 
 base=[];
 let i=1;
 
-function chunk(){
+function loop(){
 
-const end=Math.min(i+2000,l.length);
+const chunkSize=1500;
+const end=Math.min(i+chunkSize,lines.length);
 
 for(;i<end;i++){
-const c=l[i].split(';');
+
+const c=lines[i].split(';');
 if(c.length<8)continue;
 
 base.push({
@@ -300,25 +290,30 @@ valor:Math.abs(+(c[9]||0))
 });
 }
 
-if(i<l.length){
-setTimeout(chunk,0);
+/* PROGRESS REAL */
+const pct=Math.round((i/lines.length)*100);
+prog('b1','s1','Processando '+pct+'%',pct);
+
+if(i<lines.length){
+requestAnimationFrame(loop);
 }else{
 view=[...base];
 render();
 kpi();
+prog('b1','s1','Concluído ✔',100);
 }
 }
 
-chunk();
+loop();
 };
 
-r.readAsText(file,'latin1');
-}
+reader.readAsText(file,'latin1');
+});
 
-/* =====================
+/* =========================
 APANHA
-===================== */
-function loadApanha(e){
+========================= */
+document.getElementById('file2').addEventListener('change',function(e){
 
 const r=new FileReader();
 
@@ -337,16 +332,17 @@ apanha[cod]=apanha[cod]||[];
 apanha[cod].push(c[0]);
 }
 
+prog('b2','s2','OK ✔',100);
 kpi();
 };
 
 r.readAsText(e.target.files[0],'latin1');
-}
+});
 
-/* =====================
+/* =========================
 PULMÃO
-===================== */
-function loadPulmao(e){
+========================= */
+document.getElementById('file3').addEventListener('change',function(e){
 
 const r=new FileReader();
 
@@ -365,15 +361,16 @@ pulmao[cod]=pulmao[cod]||[];
 pulmao[cod].push(c[0]);
 }
 
+prog('b3','s3','OK ✔',100);
 kpi();
 };
 
 r.readAsText(e.target.files[0],'latin1');
-}
+});
 
-/* =====================
+/* =========================
 RENDER
-===================== */
+========================= */
 function render(){
 
 const tb=document.getElementById('tb');
@@ -393,9 +390,9 @@ tb.innerHTML+=`
 });
 }
 
-/* =====================
-FILTRO
-===================== */
+/* =========================
+KPI
+========================= */
 function kpi(){
 document.getElementById('k1').innerText=base.length;
 
@@ -407,15 +404,15 @@ document.getElementById('k2').innerText=a;
 document.getElementById('k3').innerText=p;
 }
 
+/* =========================
+UTILS
+========================= */
 function ordenar(t){
 if(t==='maior')view.sort((a,b)=>b.valor-a.valor);
 if(t==='menor')view.sort((a,b)=>a.valor-b.valor);
 render();
 }
 
-/* =====================
-EXCEL
-===================== */
 function exportar(){
 
 const data=view.map(x=>({
