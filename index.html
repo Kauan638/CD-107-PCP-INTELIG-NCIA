@@ -3,23 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS FINAL PRO</title>
+<title>CD-107 WMS PRO FINAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
-
-header{
-padding:14px;
-background:#111827;
-position:sticky;
-top:0;
-font-weight:bold;
+body{
+margin:0;
+font-family:Segoe UI;
+background:#0b1220;
+color:#e5e7eb;
 }
 
-.container{padding:14px;max-width:1400px;margin:auto}
+header{
+background:#111827;
+padding:16px;
+font-weight:bold;
+position:sticky;
+top:0;
+z-index:10;
+}
 
+.container{
+padding:14px;
+max-width:1400px;
+margin:auto;
+}
+
+/* KPIs */
 .kpi{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -34,6 +45,7 @@ border-radius:8px;
 border:1px solid #1f2937;
 }
 
+/* UPLOAD */
 .upload{
 margin-top:10px;
 background:#0f172a;
@@ -42,30 +54,7 @@ border:1px solid #1f2937;
 border-radius:10px;
 }
 
-.bar{
-height:6px;
-background:#1f2937;
-border-radius:10px;
-overflow:hidden;
-margin-top:6px;
-}
-
-.bar-fill{
-height:100%;
-width:0%;
-background:#22c55e;
-}
-
-input,select{
-padding:10px;
-margin-top:8px;
-background:#111827;
-border:1px solid #1f2937;
-color:#fff;
-border-radius:8px;
-width:100%;
-}
-
+/* FILTROS */
 .filters{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -73,6 +62,16 @@ gap:8px;
 margin-top:10px;
 }
 
+input{
+padding:10px;
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+border-radius:8px;
+width:100%;
+}
+
+/* BOTÕES */
 .actions{
 margin-top:10px;
 display:flex;
@@ -89,14 +88,13 @@ border-radius:8px;
 cursor:pointer;
 }
 
-button:hover{opacity:.85}
-
+/* TABELA */
 .table{
 margin-top:10px;
 border:1px solid #1f2937;
 border-radius:10px;
 overflow:auto;
-max-height:500px;
+max-height:520px;
 }
 
 table{
@@ -110,19 +108,28 @@ position:sticky;
 top:0;
 background:#111827;
 padding:10px;
-cursor:pointer;
 }
 
 td{
 padding:8px;
 border-bottom:1px solid #1f2937;
 }
+
+tr:hover{
+background:#0f1a33;
+}
+
+/* CHECKBOX */
+.checkbox{
+transform:scale(1.2);
+cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 WMS FINAL PRO</header>
+<header>📊 CD-107 WMS PRO FINAL</header>
 
 <div class="container">
 
@@ -136,19 +143,16 @@ border-bottom:1px solid #1f2937;
 <!-- UPLOADS -->
 <div class="upload">
 <input type="file" id="file1">
-<div class="bar"><div id="b1" class="bar-fill"></div></div>
 <small>Comparativo</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file2">
-<div class="bar"><div id="b2" class="bar-fill"></div></div>
 <small>Apanha</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file3">
-<div class="bar"><div id="b3" class="bar-fill"></div></div>
 <small>Pulmão</small>
 </div>
 
@@ -163,12 +167,12 @@ border-bottom:1px solid #1f2937;
 
 <!-- AÇÕES -->
 <div class="actions">
-<button onclick="ordenar('az')">A-Z</button>
-<button onclick="ordenar('za')">Z-A</button>
+<button onclick="selecionarTodos()">Selecionar todos</button>
+<button onclick="limparSelecao()">Limpar seleção</button>
 <button onclick="ordenar('maior')">Maior valor</button>
 <button onclick="ordenar('menor')">Menor valor</button>
 <button onclick="exportar()">Excel</button>
-<button onclick="imprimir()">Imprimir</button>
+<button onclick="imprimir()">Imprimir selecionados</button>
 </div>
 
 <!-- TABELA -->
@@ -176,6 +180,7 @@ border-bottom:1px solid #1f2937;
 <table>
 <thead>
 <tr>
+<th>✔</th>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
@@ -185,6 +190,7 @@ border-bottom:1px solid #1f2937;
 <th>Pulmão</th>
 </tr>
 </thead>
+
 <tbody id="tb"></tbody>
 </table>
 </div>
@@ -193,11 +199,15 @@ border-bottom:1px solid #1f2937;
 
 <script>
 
-let base = [];
-let view = [];
-let apanha = {};
-let pulmao = {};
+let base=[];
+let view=[];
+let apanha={};
+let pulmao={};
+let selecionados=new Set();
 
+/* =========================
+UTIL BR
+========================= */
 function parseBR(v){
 return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 }
@@ -207,14 +217,14 @@ COMPARATIVO
 ========================= */
 document.getElementById('file1').addEventListener('change', async e=>{
 
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
+const text=await e.target.files[0].text();
+const lines=text.split(/\r?\n/);
 
-base = [];
+base=[];
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 10) continue;
+const c=lines[i].split(';');
+if(c.length<10) continue;
 
 base.push({
 codigo:c[0],
@@ -225,112 +235,65 @@ valor:parseBR(c[9])
 });
 }
 
-view = [...base];
+view=[...base];
 render();
 kpi();
 
-document.getElementById('b1').style.width='100%';
 });
 
 /* =========================
 APANHA
 ========================= */
-document.getElementById('file2').addEventListener('change', async e=>{
+document.getElementById('file2').addEventListener('change',async e=>{
 
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
+const text=await e.target.files[0].text();
+const lines=text.split(/\r?\n/);
 
-apanha = {};
+apanha={};
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 6) continue;
-
-const cod = c[5];
-apanha[cod] = (apanha[cod]||0)+1;
+const c=lines[i].split(';');
+const cod=c[5];
+if(cod) apanha[cod]=(apanha[cod]||0)+1;
 }
 
 kpi();
-document.getElementById('b2').style.width='100%';
+
 });
 
 /* =========================
 PULMÃO
 ========================= */
-document.getElementById('file3').addEventListener('change', async e=>{
+document.getElementById('file3').addEventListener('change',async e=>{
 
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
+const text=await e.target.files[0].text();
+const lines=text.split(/\r?\n/);
 
-pulmao = {};
+pulmao={};
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 6) continue;
-
-const cod = c[5];
-pulmao[cod] = (pulmao[cod]||0)+1;
+const c=lines[i].split(';');
+const cod=c[5];
+if(cod) pulmao[cod]=(pulmao[cod]||0)+1;
 }
 
 kpi();
-document.getElementById('b3').style.width='100%';
-});
-
-/* =========================
-FILTROS
-========================= */
-function aplicarFiltros(){
-
-const cod = document.getElementById('f_codigo').value.toLowerCase();
-const desc = document.getElementById('f_desc').value.toLowerCase();
-const local = document.getElementById('f_local').value.toLowerCase();
-const min = parseBR(document.getElementById('f_min').value);
-const max = parseBR(document.getElementById('f_max').value);
-
-view = base.filter(x=>{
-
-return (
-(!cod || x.codigo.toLowerCase().includes(cod)) &&
-(!desc || x.desc.toLowerCase().includes(desc)) &&
-(!local || x.local.toLowerCase().includes(local)) &&
-(!min || x.valor >= min) &&
-(!max || x.valor <= max)
-);
 
 });
-
-render();
-}
-
-document.querySelectorAll('input').forEach(i=>{
-i.addEventListener('keyup', aplicarFiltros);
-});
-
-/* =========================
-ORDENAÇÃO
-========================= */
-function ordenar(tipo){
-
-if(tipo==='az') view.sort((a,b)=>a.codigo.localeCompare(b.codigo));
-if(tipo==='za') view.sort((a,b)=>b.codigo.localeCompare(a.codigo));
-if(tipo==='maior') view.sort((a,b)=>b.valor-a.valor);
-if(tipo==='menor') view.sort((a,b)=>a.valor-b.valor);
-
-render();
-}
 
 /* =========================
 RENDER
 ========================= */
 function render(){
 
-let html='';
+const tb=document.getElementById('tb');
+tb.innerHTML='';
 
-for(let i=0;i<view.length;i++){
-const x=view[i];
+view.forEach(x=>{
 
-html += `
+tb.innerHTML+=`
 <tr>
+<td><input class="checkbox" type="checkbox" onchange="toggle('${x.codigo}',this.checked)" ${selecionados.has(x.codigo)?'checked':''}></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
@@ -339,9 +302,62 @@ html += `
 <td>${apanha[x.codigo]||'SEM'}</td>
 <td>${pulmao[x.codigo]||'SEM'}</td>
 </tr>`;
+});
 }
 
-document.getElementById('tb').innerHTML = html;
+/* =========================
+SELEÇÃO
+========================= */
+function toggle(cod,checked){
+if(checked) selecionados.add(cod);
+else selecionados.delete(cod);
+}
+
+function selecionarTodos(){
+view.forEach(x=>selecionados.add(x.codigo));
+render();
+}
+
+function limparSelecao(){
+selecionados.clear();
+render();
+}
+
+/* =========================
+FILTROS
+========================= */
+function aplicarFiltros(){
+
+const cod=f_codigo.value.toLowerCase();
+const desc=f_desc.value.toLowerCase();
+const local=f_local.value.toLowerCase();
+const min=parseBR(f_min.value);
+const max=parseBR(f_max.value);
+
+view=base.filter(x=>
+(!cod||x.codigo.toLowerCase().includes(cod))&&
+(!desc||x.desc.toLowerCase().includes(desc))&&
+(!local||x.local.toLowerCase().includes(local))&&
+(!min||x.valor>=min)&&
+(!max||x.valor<=max)
+);
+
+render();
+}
+
+document.querySelectorAll('input').forEach(i=>{
+i.addEventListener('keyup',aplicarFiltros);
+});
+
+/* =========================
+ORDENAÇÃO
+========================= */
+function ordenar(tipo){
+
+if(tipo==='maior') view.sort((a,b)=>b.valor-a.valor);
+if(tipo==='menor') view.sort((a,b)=>a.valor-b.valor);
+
+render();
 }
 
 /* =========================
@@ -349,14 +365,14 @@ KPI
 ========================= */
 function kpi(){
 
-document.getElementById('k1').innerText = base.length;
+k1.innerText=base.length;
 
 let a=0,p=0;
 for(let k in apanha)a+=apanha[k];
 for(let k in pulmao)p+=pulmao[k];
 
-document.getElementById('k2').innerText = a;
-document.getElementById('k3').innerText = p;
+k2.innerText=a;
+k3.innerText=p;
 }
 
 /* =========================
@@ -364,7 +380,9 @@ EXPORT
 ========================= */
 function exportar(){
 
-const data = view.map(x=>({
+const data=view
+.filter(x=>selecionados.size===0||selecionados.has(x.codigo))
+.map(x=>({
 Codigo:x.codigo,
 Descricao:x.desc,
 Local:x.local,
@@ -374,8 +392,8 @@ Apanha:apanha[x.codigo]||0,
 Pulmao:pulmao[x.codigo]||0
 }));
 
-const ws = XLSX.utils.json_to_sheet(data);
-const wb = XLSX.utils.book_new();
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"CD107");
 XLSX.writeFile(wb,"CD107.xlsx");
 }
@@ -384,7 +402,28 @@ XLSX.writeFile(wb,"CD107.xlsx");
 IMPRIMIR
 ========================= */
 function imprimir(){
-window.print();
+
+const selecionadosData=view.filter(x=>selecionados.has(x.codigo));
+
+let w=window.open('');
+w.document.write('<html><head><title>Relatório</title></head><body>');
+w.document.write('<h2>RELATÓRIO CD-107</h2>');
+
+selecionadosData.forEach(x=>{
+w.document.write(`
+<p>
+<b>${x.codigo}</b> - ${x.desc}<br>
+Local: ${x.local}<br>
+Qtd: ${x.qtd}<br>
+Valor: ${x.valor}<br>
+Apanha: ${apanha[x.codigo]||'SEM APANHA'}<br>
+Pulmão: ${pulmao[x.codigo]||'SEM PULMÃO'}
+</p><hr>
+`);
+});
+
+w.document.write('</body></html>');
+w.print();
 }
 
 </script>
