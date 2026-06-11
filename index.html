@@ -3,319 +3,349 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 PCP Inteligência</title>
+<title>CD-107 WMS INTELIGÊNCIA</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
 
 body{
+margin:0;
+font-family:Segoe UI;
 background:#0f172a;
 color:white;
+display:flex;
 }
 
-header{
+/* SIDEBAR */
+.sidebar{
+width:260px;
 background:#111827;
-padding:20px;
-border-bottom:1px solid #1f2937;
+padding:15px;
+height:100vh;
+position:sticky;
+top:0;
 }
 
-.container{
-padding:20px;
+.sidebar h2{
+font-size:14px;
+color:#94a3b8;
+margin-top:20px;
 }
 
-.upload{
+.btn{
+width:100%;
+padding:10px;
+margin:5px 0;
 background:#1e293b;
+border:none;
+color:white;
+cursor:pointer;
+border-radius:8px;
+text-align:left;
+}
+
+.btn:hover{
+background:#2563eb;
+}
+
+/* CONTEUDO */
+.main{
+flex:1;
 padding:20px;
-border-radius:15px;
-margin-bottom:20px;
 }
 
 .cards{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:15px;
-margin-bottom:20px;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
 }
 
 .card{
 background:#1e293b;
-padding:20px;
-border-radius:15px;
-}
-
-.card h3{
-color:#94a3b8;
-font-size:14px;
+padding:15px;
+border-radius:10px;
 }
 
 .valor{
-font-size:24px;
+font-size:20px;
 font-weight:bold;
-margin-top:10px;
 }
 
-.graficos{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-margin-top:20px;
-}
-
-.box{
-background:#1e293b;
-padding:20px;
-border-radius:15px;
-}
-
+/* TABELA */
 table{
 width:100%;
+margin-top:15px;
 border-collapse:collapse;
 }
 
-th{
-background:#111827;
-padding:10px;
-}
-
-td{
+th,td{
 padding:8px;
 border-bottom:1px solid #334155;
 font-size:13px;
 }
 
-input{
-width:100%;
-padding:10px;
-margin-top:15px;
-border-radius:8px;
-border:none;
-}
-
-button{
-background:#2563eb;
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:8px;
+tr:hover{
+background:#1e293b;
 cursor:pointer;
-margin-top:10px;
 }
 
-.critico{color:#ef4444;font-weight:bold;}
-.alto{color:#f59e0b;font-weight:bold;}
-
-@media(max-width:1200px){
-.graficos{grid-template-columns:1fr;}
+/* MODAL */
+.modal{
+position:fixed;
+top:0;left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+align-items:center;
+justify-content:center;
 }
+
+.modal-content{
+background:#111827;
+padding:20px;
+width:70%;
+border-radius:10px;
+max-height:90vh;
+overflow:auto;
+}
+
+.section{
+margin-bottom:15px;
+padding:10px;
+background:#1e293b;
+border-radius:8px;
+}
+
 </style>
 </head>
-
 <body>
+  <script>
 
-<header>
-<h1>📊 CD-107 PCP INTELIGÊNCIA</h1>
-</header>
+let comparativo = [];
+let apanha = [];
+let pulmao = [];
 
-<div class="container">
+let dados = [];
 
-<div class="upload">
-<h2>Importar Comparativo de Estoque</h2>
-<input type="file" id="arquivo" accept=".txt">
+let selected = null;
+
+document.addEventListener('DOMContentLoaded', ()=>{
+
+document.getElementById('file1').onchange = e=>loadComparativo(e);
+document.getElementById('file2').onchange = e=>loadApanha(e);
+document.getElementById('file3').onchange = e=>loadPulmao(e);
+
+});
+
+function parseBR(v){
+return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+}
+
+/* =========================
+   1. COMPARATIVO
+========================= */
+function loadComparativo(e){
+const file = e.target.files[0];
+const r = new FileReader();
+
+r.onload = ev=>{
+const lines = ev.target.result.split(/\r?\n/);
+
+comparativo = [];
+
+for(let i=1;i<lines.length;i++){
+const c = lines[i].split(';');
+if(c.length < 10) continue;
+
+comparativo.push({
+codigo:c[0],
+desc:c[1],
+local:c[2],
+qtd:parseBR(c[6]),
+valor:parseBR(c[9])
+});
+}
+
+buildTable();
+};
+
+r.readAsText(file,'latin1');
+}
+
+/* =========================
+   2. APANHA
+========================= */
+function loadApanha(e){
+const file = e.target.files[0];
+const r = new FileReader();
+
+r.onload = ev=>{
+const lines = ev.target.result.split(/\r?\n/);
+
+apanha = {};
+
+for(let i=1;i<lines.length;i++){
+const c = lines[i].split(';');
+if(c.length < 3) continue;
+
+const cod = c[1];
+const end = c[0];
+
+if(!apanha[cod]) apanha[cod]=[];
+apanha[cod].push(end);
+}
+};
+
+r.readAsText(file,'latin1');
+}
+
+/* =========================
+   3. PULMÃO
+========================= */
+function loadPulmao(e){
+const file = e.target.files[0];
+const r = new FileReader();
+
+r.onload = ev=>{
+const lines = ev.target.result.split(/\r?\n/);
+
+pulmao = {};
+
+for(let i=1;i<lines.length;i++){
+const c = lines[i].split(';');
+if(c.length < 7) continue;
+
+const cod = c[5];
+
+if(!pulmao[cod]) pulmao[cod]=[];
+
+pulmao[cod].push({
+endereco:`${c[1]}-${c[2]}-${c[3]}-${c[4]}`,
+status:c[8]
+});
+}
+};
+
+r.readAsText(file,'latin1');
+}
+
+/* =========================
+   TABELA PRINCIPAL
+========================= */
+function buildTable(){
+
+const tb = document.getElementById('tb');
+tb.innerHTML='';
+
+comparativo.forEach(x=>{
+
+const tr = document.createElement('tr');
+
+tr.onclick=()=>openProduct(x.codigo);
+
+tr.innerHTML=`
+<td>${x.codigo}</td>
+<td>${x.desc}</td>
+<td>${x.local}</td>
+<td>${x.qtd}</td>
+<td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
+`;
+
+tb.appendChild(tr);
+});
+}
+
+/* =========================
+   PAINEL PRODUTO
+========================= */
+function openProduct(cod){
+
+selected = cod;
+
+document.getElementById('modal').style.display='flex';
+
+const comp = comparativo.find(x=>x.codigo==cod);
+
+document.getElementById('title').innerText =
+`Produto ${cod} - ${comp?.desc || ''}`;
+
+/* APANHA */
+document.getElementById('apanha').innerHTML =
+(apanha[cod] || []).map(x=>`<div>${x}</div>`).join('') || 'Sem apanha';
+
+/* PULMAO */
+document.getElementById('pulmao').innerHTML =
+(pulmao[cod] || []).map(x=>`
+<div>${x.endereco} (${x.status})</div>
+`).join('') || 'Sem pulmão';
+
+/* DIVERGENCIA */
+document.getElementById('div').innerHTML = `
+Qtd: ${comp?.qtd || 0}<br>
+Valor: ${(comp?.valor || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+`;
+}
+
+function closeModal(){
+document.getElementById('modal').style.display='none';
+}
+
+</script>
+
+<!-- FILE INPUTS -->
+<div class="sidebar">
+<h2>Uploads</h2>
+<input type="file" id="file1">
+<input type="file" id="file2">
+<input type="file" id="file3">
+
+<h2>Produtos</h2>
+<div id="list"></div>
 </div>
 
-<div class="cards">
+<!-- MAIN -->
+<div class="main">
+<h1>Dashboard WMS Inteligência</h1>
 
-<div class="card"><h3>Total Divergência</h3><div class="valor" id="total"></div></div>
-<div class="card"><h3>Positivo</h3><div class="valor" id="positivo"></div></div>
-<div class="card"><h3>Negativo</h3><div class="valor" id="negativo"></div></div>
-<div class="card"><h3>Itens</h3><div class="valor" id="itens"></div></div>
-<div class="card"><h3>Críticos</h3><div class="valor" id="criticos"></div></div>
-<div class="card"><h3>Locais</h3><div class="valor" id="locais"></div></div>
-
-</div>
-
-<input type="text" id="pesquisa" placeholder="Pesquisar...">
-
-<div class="box">
 <table>
 <thead>
 <tr>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
-<th>Qtd Divergente</th>
-<th>Valor Divergente</th>
-<th>Status</th>
+<th>Qtd</th>
+<th>Valor</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="tb"></tbody>
 </table>
 </div>
 
-<div class="graficos">
-<div class="box"><canvas id="g1"></canvas></div>
-<div class="box"><canvas id="g2"></canvas></div>
-<div class="box"><canvas id="g3"></canvas></div>
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="closeModal()">
+<div class="modal-content" onclick="event.stopPropagation()">
+
+<h2 id="title"></h2>
+
+<div class="section">
+<h3>Apanha</h3>
+<div id="apanha"></div>
+</div>
+
+<div class="section">
+<h3>Pulmão</h3>
+<div id="pulmao"></div>
+</div>
+
+<div class="section">
+<h3>Divergência</h3>
+<div id="div"></div>
 </div>
 
 </div>
-<script>
-
-let dados = [];
-let g1,g2,g3;
-
-function parseBR(v){
-return parseFloat(String(v)
-.replace(/\./g,'')
-.replace(',', '.')) || 0;
-}
-
-document.getElementById('arquivo')
-.addEventListener('change', e => {
-
-const file = e.target.files[0];
-if(!file) return;
-
-const reader = new FileReader();
-
-reader.onload = function(ev){
-processar(ev.target.result);
-};
-
-reader.readAsText(file,'latin1');
-
-});
-
-function processar(txt){
-
-const linhas = txt.split(/\r?\n/);
-
-dados = [];
-
-let total=0, pos=0, neg=0, crit=0;
-const locais = new Set();
-
-for(let i=1;i<linhas.length;i++){
-
-const c = linhas[i].split(';');
-if(c.length < 10) continue;
-
-const codigo = c[0];
-const desc = c[1];
-const local = c[2];
-
-const qtd = parseBR(c[6]);
-const valor = parseBR(c[9]);
-
-locais.add(local);
-
-total += valor;
-if(valor>0) pos+=valor;
-if(valor<0) neg+=valor;
-
-let status = "Baixo";
-if(Math.abs(valor)>20000){status="Crítico"; crit++;}
-else if(Math.abs(valor)>10000){status="Alto";}
-
-dados.push({codigo,desc,local,qtd,valor,status});
-}
-
-document.getElementById('total').innerText =
-total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
-document.getElementById('positivo').innerText =
-pos.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
-document.getElementById('negativo').innerText =
-neg.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-
-document.getElementById('itens').innerText = dados.length;
-document.getElementById('criticos').innerText = crit;
-document.getElementById('locais').innerText = locais.size;
-
-renderTabela(dados);
-renderGraficos(dados);
-}
-
-function renderTabela(arr){
-
-const tb = document.getElementById('tbody');
-tb.innerHTML='';
-
-arr.sort((a,b)=>Math.abs(b.valor)-Math.abs(a.valor))
-.forEach(d=>{
-
-tb.innerHTML += `
-<tr>
-<td>${d.codigo}</td>
-<td>${d.desc}</td>
-<td>${d.local}</td>
-<td>${d.qtd}</td>
-<td>${d.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
-<td class="${d.status=='Crítico'?'critico':d.status=='Alto'?'alto':''}">
-${d.status}
-</td>
-</tr>`;
-});
-}
-
-function renderGraficos(arr){
-
-const top = [...arr].sort((a,b)=>Math.abs(b.valor)-Math.abs(a.valor)).slice(0,10);
-
-if(g1) g1.destroy();
-if(g2) g2.destroy();
-if(g3) g3.destroy();
-
-g1 = new Chart(document.getElementById('g1'),{
-type:'bar',
-data:{
-labels:top.map(x=>x.desc.substring(0,20)),
-datasets:[{label:'Valor',data:top.map(x=>x.valor)}]
-}
-});
-
-g2 = new Chart(document.getElementById('g2'),{
-type:'bar',
-data:{
-labels:top.map(x=>x.desc.substring(0,20)),
-datasets:[{label:'Qtd',data:top.map(x=>x.qtd)}]
-}
-});
-
-const map = {};
-arr.forEach(x=>{
-map[x.local]=(map[x.local]||0)+Math.abs(x.valor);
-});
-
-const loc = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-
-g3 = new Chart(document.getElementById('g3'),{
-type:'bar',
-data:{
-labels:loc.map(x=>x[0]),
-datasets:[{label:'Local',data:loc.map(x=>x[1])}]
-}
-});
-}
-
-document.getElementById('pesquisa')
-.addEventListener('input',function(){
-const v=this.value.toLowerCase();
-
-document.querySelectorAll('tbody tr').forEach(tr=>{
-tr.style.display = tr.innerText.toLowerCase().includes(v)?'':'none';
-});
-});
-
-</script>
+</div>
 
 </body>
 </html>
