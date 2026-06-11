@@ -3,87 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 PCP INTELIGÊNCIA PRO</title>
+<title>CD-107 | WMS Intelligence</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 
-body{
+/* =====================
+BASE
+===================== */
+*{
 margin:0;
-font-family:Segoe UI;
-background:#0f172a;
-color:white;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,Segoe UI,Arial;
 }
 
-header{
-padding:15px;
-background:#111827;
-font-weight:bold;
-}
-
-.container{padding:15px}
-
-.box{
-background:#1e293b;
-padding:12px;
-border-radius:10px;
-margin-top:10px;
-}
-
-.kpi{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-.kpi div{
+body{
 background:#0b1220;
-padding:10px;
-border-radius:8px;
-font-size:13px;
+color:#e5e7eb;
 }
 
+/* =====================
+HEADER
+===================== */
+header{
+position:sticky;
+top:0;
+z-index:10;
+background:rgba(17,24,39,.95);
+backdrop-filter:blur(10px);
+padding:16px 20px;
+border-bottom:1px solid #1f2937;
+}
+
+header h1{
+font-size:18px;
+letter-spacing:.5px;
+}
+
+/* =====================
+CONTAINER
+===================== */
+.container{
+padding:18px;
+max-width:1400px;
+margin:auto;
+}
+
+/* =====================
+CARDS KPI
+===================== */
+.kpi{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:12px;
+margin-top:12px;
+}
+
+.kpi-card{
+background:#111827;
+border:1px solid #1f2937;
+padding:14px;
+border-radius:12px;
+border-left:3px solid #2563eb;
+}
+
+.kpi-card b{
+font-size:18px;
+display:block;
+margin-top:6px;
+}
+
+/* =====================
+UPLOAD MODERNO
+===================== */
 .upload-grid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:12px;
-margin-top:10px;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:14px;
+margin-top:14px;
 }
 
 .upload-card{
-background:#0b1220;
+background:#0f172a;
 border:1px solid #1f2937;
-padding:12px;
-border-radius:10px;
+padding:16px;
+border-radius:14px;
 transition:.2s;
+cursor:pointer;
+position:relative;
+overflow:hidden;
 }
 
 .upload-card:hover{
 border-color:#2563eb;
-transform:scale(1.02);
+transform:translateY(-2px);
 }
 
 .upload-title{
 font-size:13px;
 color:#94a3b8;
-margin-bottom:6px;
+margin-bottom:10px;
 }
 
-.upload-card input{
-width:100%;
-padding:8px;
-background:#111827;
+.upload-btn{
+display:inline-block;
+padding:10px 12px;
+background:#2563eb;
 color:white;
-border-radius:6px;
-border:1px solid #334155;
+border-radius:10px;
+font-size:13px;
+cursor:pointer;
+text-align:center;
+transition:.2s;
+}
+
+.upload-btn:hover{
+background:#1d4ed8;
+}
+
+input[type=file]{
+display:none;
 }
 
 .bar{
 height:6px;
 background:#1f2937;
-border-radius:10px;
-margin-top:6px;
+border-radius:999px;
+margin-top:10px;
 overflow:hidden;
 }
 
@@ -96,110 +144,165 @@ transition:.3s;
 
 .status{
 font-size:11px;
-color:#94a3b8;
-margin-top:4px;
+color:#9ca3af;
+margin-top:6px;
+}
+
+/* =====================
+FILTROS
+===================== */
+.filters{
+margin-top:16px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;
+}
+
+.filters input{
+padding:10px;
+background:#111827;
+border:1px solid #1f2937;
+border-radius:10px;
+color:white;
+outline:none;
+}
+
+/* =====================
+BOTÕES
+===================== */
+.actions{
+margin-top:12px;
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.btn{
+padding:10px 14px;
+border-radius:10px;
+border:1px solid #1f2937;
+background:#111827;
+color:#e5e7eb;
+cursor:pointer;
+transition:.2s;
+font-size:13px;
+}
+
+.btn:hover{
+background:#1f2937;
+border-color:#2563eb;
+}
+
+/* =====================
+TABELA
+===================== */
+.table{
+margin-top:14px;
+overflow:auto;
+border-radius:12px;
+border:1px solid #1f2937;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
 font-size:12px;
+min-width:900px;
 }
 
-th,td{
-border-bottom:1px solid #334155;
-padding:6px;
+th{
+position:sticky;
+top:0;
+background:#111827;
+padding:10px;
+text-align:left;
 }
 
-th{background:#111827}
-
-button{
-background:#2563eb;
-color:white;
-border:none;
-padding:6px 10px;
-margin:3px;
-border-radius:6px;
-cursor:pointer;
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
 }
 
-button:hover{opacity:.8}
+tr:hover{
+background:#0f172a;
+}
 
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 PCP INTELIGÊNCIA PRO</header>
+<header>
+<h1>📊 CD-107 WMS Intelligence Dashboard</h1>
+</header>
 
 <div class="container">
 
 <!-- KPI -->
-<div class="box kpi">
-<div>📦 Itens: <b id="k1">0</b></div>
-<div>📍 Apanhas: <b id="k2">0</b></div>
-<div>🏭 Pulmões: <b id="k3">0</b></div>
+<div class="kpi">
+<div class="kpi-card">📦 Itens<b id="k1">0</b></div>
+<div class="kpi-card">📍 Apanhas<b id="k2">0</b></div>
+<div class="kpi-card">🏭 Pulmões<b id="k3">0</b></div>
 </div>
 
 <!-- UPLOAD -->
-<div class="box">
-
-<h3>Uploads</h3>
-
 <div class="upload-grid">
 
 <div class="upload-card">
-<div class="upload-title">📊 Comparativo</div>
+<div class="upload-title">Comparativo de Estoque</div>
+<label class="upload-btn">
+📁 Carregar Comparativo
 <input type="file" id="file1">
+</label>
 <div class="bar"><div id="b1" class="bar-fill"></div></div>
-<div class="status" id="s1">Aguardando...</div>
+<div class="status" id="s1">Aguardando arquivo</div>
 </div>
 
 <div class="upload-card">
-<div class="upload-title">📍 Apanha</div>
+<div class="upload-title">Mapa de Apanha</div>
+<label class="upload-btn">
+📍 Carregar Apanha
 <input type="file" id="file2">
+</label>
 <div class="bar"><div id="b2" class="bar-fill"></div></div>
-<div class="status" id="s2">Aguardando...</div>
+<div class="status" id="s2">Aguardando arquivo</div>
 </div>
 
 <div class="upload-card">
-<div class="upload-title">🏭 Pulmão</div>
+<div class="upload-title">Estoque Pulmão</div>
+<label class="upload-btn">
+🏭 Carregar Pulmão
 <input type="file" id="file3">
+</label>
 <div class="bar"><div id="b3" class="bar-fill"></div></div>
-<div class="status" id="s3">Aguardando...</div>
+<div class="status" id="s3">Aguardando arquivo</div>
 </div>
 
-</div>
 </div>
 
 <!-- FILTROS -->
-<div class="box">
-
+<div class="filters">
 <input id="f1" placeholder="Código" oninput="filtrar()">
 <input id="f2" placeholder="Descrição" oninput="filtrar()">
 <input id="f3" placeholder="Local" oninput="filtrar()">
-<input id="f4" placeholder="Valor mín" oninput="filtrar()">
-
+<input id="f4" placeholder="Valor mínimo" oninput="filtrar()">
 </div>
 
 <!-- BOTÕES -->
-<div class="box">
-
-<button onclick="ordenar('maior')">Maior valor</button>
-<button onclick="ordenar('menor')">Menor valor</button>
-<button onclick="exportar()">Excel</button>
-<button onclick="imprimir()">Imprimir</button>
-
+<div class="actions">
+<button class="btn" onclick="ordenar('maior')">⬆ Maior valor</button>
+<button class="btn" onclick="ordenar('menor')">⬇ Menor valor</button>
+<button class="btn" onclick="exportar()">📊 Excel</button>
+<button class="btn" onclick="imprimir()">🖨 Imprimir</button>
 </div>
 
 <!-- TABELA -->
-<div class="box">
-
+<div class="table">
 <table>
 <thead>
 <tr>
-<th>Cód</th>
-<th>Desc</th>
+<th>Código</th>
+<th>Descrição</th>
 <th>Local</th>
 <th>Qtd</th>
 <th>Valor</th>
@@ -207,10 +310,8 @@ button:hover{opacity:.8}
 <th>Pulmão</th>
 </tr>
 </thead>
-
 <tbody id="tb"></tbody>
 </table>
-
 </div>
 
 </div>
@@ -221,15 +322,10 @@ let base=[],view=[];
 let apanha={},pulmao={};
 
 function norm(v){
-return String(v||'')
-.trim()
-.replace(/\s/g,'')
-.replace(/^0+/,'');
+return String(v||'').trim().replace(/\s/g,'').replace(/^0+/,'');
 }
 
-/* =========================
-KPI
-========================= */
+/* KPI */
 function kpi(){
 document.getElementById('k1').innerText=base.length;
 
@@ -241,25 +337,20 @@ document.getElementById('k2').innerText=a;
 document.getElementById('k3').innerText=p;
 }
 
-/* =========================
-PROGRESS
-========================= */
+/* PROGRESS */
 function prog(bar,status,t,p){
 document.getElementById(bar).style.width=p+'%';
 document.getElementById(status).innerText=t;
 }
 
-/* =========================
-COMPARATIVO (OTIMIZADO)
-========================= */
+/* COMPARATIVO (OTIMIZADO) */
 file1.onchange=e=>{
-prog('b1','s1','Iniciando...',10);
+prog('b1','s1','Processando...',10);
 
 const file=e.target.files[0];
 const r=new FileReader();
 
 r.onload=ev=>{
-
 const l=ev.target.result.split(/\r?\n/);
 
 base=[];
@@ -270,7 +361,6 @@ function chunk(){
 const end=Math.min(i+2000,l.length);
 
 for(;i<end;i++){
-
 const c=l[i].split(';');
 if(c.length<8)continue;
 
@@ -283,7 +373,7 @@ valor:Math.abs(+(c[9]||0))
 });
 }
 
-prog('b1','s1',`Processando ${Math.round(i/l.length*100)}%`,40+(i/l.length*60));
+prog('b1','s1',`Carregando ${Math.round(i/l.length*100)}%`,40+(i/l.length*60));
 
 if(i<l.length){
 setTimeout(chunk,0);
@@ -301,11 +391,9 @@ chunk();
 r.readAsText(file,'latin1');
 };
 
-/* =========================
-APANHA
-========================= */
+/* APANHA */
 file2.onchange=e=>{
-prog('b2','s2','Carregando...',30);
+prog('b2','s2','Carregando...',20);
 
 const r=new FileReader();
 
@@ -331,11 +419,9 @@ prog('b2','s2','OK ✔',100);
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =========================
-PULMÃO
-========================= */
+/* PULMÃO */
 file3.onchange=e=>{
-prog('b3','s3','Carregando...',30);
+prog('b3','s3','Carregando...',20);
 
 const r=new FileReader();
 
@@ -361,9 +447,7 @@ prog('b3','s3','OK ✔',100);
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =========================
-RENDER
-========================= */
+/* RENDER */
 function render(arr){
 
 const tb=document.getElementById('tb');
@@ -383,9 +467,7 @@ tb.innerHTML+=`
 });
 }
 
-/* =========================
-FILTRO
-========================= */
+/* FILTRO */
 function filtrar(){
 
 const a=f1.value.toLowerCase();
@@ -403,20 +485,14 @@ view=base.filter(x=>
 render(view);
 }
 
-/* =========================
-ORDENAR
-========================= */
+/* ORDENAR */
 function ordenar(t){
-
 if(t==='maior')view.sort((a,b)=>b.valor-a.valor);
 if(t==='menor')view.sort((a,b)=>a.valor-b.valor);
-
 render(view);
 }
 
-/* =========================
-EXCEL
-========================= */
+/* EXCEL */
 function exportar(){
 
 const data=view.map(x=>({
@@ -435,9 +511,7 @@ XLSX.utils.book_append_sheet(wb,ws,'CD107');
 XLSX.writeFile(wb,'CD107.xlsx');
 }
 
-/* =========================
-PRINT
-========================= */
+/* PRINT */
 function imprimir(){
 window.print();
 }
