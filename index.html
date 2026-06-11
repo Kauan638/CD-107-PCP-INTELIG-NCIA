@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CD-107 PCP Inteligência</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body{
+      background:#111827;
+      color:white;
+      font-family:Arial;
+      margin:0;
+      padding:20px;
+    }
+
+    h1{
+      text-align:center;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:15px;
+      margin-top:20px;
+    }
+
+    .card{
+      background:#1f2937;
+      padding:20px;
+      border-radius:12px;
+      text-align:center;
+    }
+
+    .valor{
+      font-size:28px;
+      font-weight:bold;
+      margin-top:10px;
+    }
+
+    canvas{
+      background:white;
+      border-radius:10px;
+      margin-top:20px;
+      padding:10px;
+    }
+
+    #upload{
+      margin-top:20px;
+      margin-bottom:20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>📊 CD-107 PCP INTELIGÊNCIA</h1>
+
+<input type="file" id="upload" accept=".txt">
+
+<div class="cards">
+  <div class="card">
+    💰 Divergência Total
+    <div class="valor" id="valorTotal">R$ 0</div>
+  </div>
+
+  <div class="card">
+    📦 Qtde Divergente
+    <div class="valor" id="qtdeTotal">0</div>
+  </div>
+
+  <div class="card">
+    📋 Itens
+    <div class="valor" id="itensTotal">0</div>
+  </div>
+
+  <div class="card">
+    🚨 Críticos
+    <div class="valor" id="criticos">0</div>
+  </div>
+</div>
+
+<canvas id="grafico"></canvas>
+
+<script>
+
+let chart;
+
+document
+.getElementById('upload')
+.addEventListener('change', lerArquivo);
+
+function lerArquivo(event){
+
+ const arquivo = event.target.files[0];
+
+ const reader = new FileReader();
+
+ reader.onload = function(e){
+
+   const texto = e.target.result;
+
+   processar(texto);
+
+ };
+
+ reader.readAsText(arquivo,'latin1');
+
+}
+
+function processar(texto){
+
+ const linhas = texto.split('\n');
+
+ let valorTotal = 0;
+ let qtdeTotal = 0;
+ let itens = 0;
+ let criticos = 0;
+
+ let produtos = [];
+ let valores = [];
+
+ for(let i=1;i<linhas.length;i++){
+
+   const col = linhas[i].split(';');
+
+   if(col.length < 10) continue;
+
+   itens++;
+
+   let valor = parseFloat(
+     String(col[col.length-2])
+     .replace(/\./g,'')
+     .replace(',','.')
+   );
+
+   if(isNaN(valor))
+      valor = 0;
+
+   valorTotal += valor;
+
+   if(Math.abs(valor) > 20000)
+      criticos++;
+
+   produtos.push(col[1]);
+
+   valores.push(valor);
+
+ }
+
+ document.getElementById('valorTotal')
+ .innerHTML =
+ valorTotal.toLocaleString('pt-BR',{
+ style:'currency',
+ currency:'BRL'
+ });
+
+ document.getElementById('itensTotal')
+ .innerHTML = itens;
+
+ document.getElementById('criticos')
+ .innerHTML = criticos;
+
+ if(chart)
+   chart.destroy();
+
+ chart = new Chart(
+ document.getElementById('grafico'),
+ {
+   type:'bar',
+   data:{
+     labels: produtos.slice(0,10),
+     datasets:[{
+       label:'Valor Divergente',
+       data: valores.slice(0,10)
+     }]
+   }
+ });
+
+}
+
+</script>
+
+</body>
+</html>
