@@ -8,72 +8,19 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
-
-body{
-background:#0f172a;
-color:white;
-}
-
-header{
-background:#111827;
-padding:15px;
-border-bottom:1px solid #1f2937;
-}
-
-.container{
-padding:15px;
-}
-
-.box{
-background:#1e293b;
-padding:12px;
-border-radius:10px;
-margin-top:10px;
-}
-
-input,button{
-padding:8px;
-margin:3px;
-border:none;
-border-radius:6px;
-}
-
-button{
-background:#2563eb;
-color:white;
-cursor:pointer;
-}
-
-button:hover{
-opacity:.9;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-font-size:13px;
-}
-
-th,td{
-padding:6px;
-border-bottom:1px solid #334155;
-}
-
-th{
-background:#111827;
-}
-
-.critico{color:#ef4444;font-weight:bold;}
-
+body{margin:0;font-family:Segoe UI;background:#0f172a;color:#fff}
+header{padding:15px;background:#111827}
+.container{padding:15px}
+.box{background:#1e293b;padding:12px;border-radius:10px;margin-top:10px}
+input,button{padding:6px;margin:3px;border-radius:6px;border:none}
+button{background:#2563eb;color:#fff;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid #334155;padding:6px}
+th{background:#111827}
 small{color:#94a3b8}
-
+.critico{color:#ef4444;font-weight:bold}
+.kpi{display:flex;gap:15px;flex-wrap:wrap}
+.kpi div{background:#0b1220;padding:10px;border-radius:8px}
 </style>
 </head>
 
@@ -85,101 +32,72 @@ small{color:#94a3b8}
 
 <div class="container">
 
+<!-- KPI -->
+<div class="box kpi">
+<div>📦 Total Itens: <b id="k_total">0</b></div>
+<div>📍 Apanhas: <b id="k_apanha">0</b></div>
+<div>🏭 Pulmões: <b id="k_pulmao">0</b></div>
+</div>
+
 <!-- UPLOADS -->
 <div class="box">
-
-<h3>📥 Importação de Arquivos</h3>
-
-<div>
-<strong>1️⃣ Comparativo</strong><br>
-<small>Base principal de estoque</small><br>
-<input type="file" id="file1">
-</div>
-
-<div>
-<strong>2️⃣ Apanha</strong><br>
-<small>Endereços de separação</small><br>
-<input type="file" id="file2">
-</div>
-
-<div>
-<strong>3️⃣ Pulmão</strong><br>
-<small>Estoque do CD</small><br>
-<input type="file" id="file3">
-</div>
-
+<h3>Uploads</h3>
+<input type="file" id="file1"> Comparativo<br>
+<input type="file" id="file2"> Apanha<br>
+<input type="file" id="file3"> Pulmão<br>
 </div>
 
 <!-- FILTROS -->
 <div class="box">
-
 <input id="f_codigo" placeholder="Código" oninput="filtrar()">
 <input id="f_desc" placeholder="Descrição" oninput="filtrar()">
 <input id="f_local" placeholder="Local" oninput="filtrar()">
-<input id="f_qtd" placeholder="Qtd mín" oninput="filtrar()">
 <input id="f_valor" placeholder="Valor mín" oninput="filtrar()">
-<input id="f_pulmao" placeholder="Nº pulmões" oninput="filtrar()">
-
 </div>
 
 <!-- BOTÕES -->
 <div class="box">
-
-<button onclick="ordenar('valor')">Maior valor</button>
-<button onclick="ordenar('menorValor')">Menor valor</button>
-<button onclick="ordenar('codigo')">Código A-Z</button>
-
+<button onclick="ordenar('maior')">Maior valor</button>
+<button onclick="ordenar('menor')">Menor valor</button>
 <button onclick="exportarExcel()">Excel</button>
-<button onclick="imprimirRelatorio()">Imprimir</button>
-
+<button onclick="imprimir()">Imprimir</button>
 </div>
 
 <!-- TABELA -->
 <div class="box">
-
 <table>
 <thead>
 <tr>
-<th><input type="checkbox" onclick="toggleAll(this)"></th>
+<th>Sel</th>
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
 <th>Qtd</th>
 <th>Valor</th>
-<th>Pulmões</th>
+<th>Apanha</th>
+<th>Pulmão</th>
 </tr>
 </thead>
-
 <tbody id="tb"></tbody>
 </table>
-
 </div>
 
 </div>
 
 <script>
 
-/* =========================
-BASES
-========================= */
 let base=[];
 let view=[];
 let apanha={};
 let pulmao={};
 
-/* =========================
-NORMALIZAÇÃO (ÚNICA E DEFINITIVA)
-========================= */
 function norm(v){
-return String(v||'')
-.trim()
-.replace(/\s/g,'')
-.replace(/^0+/,'');
+return String(v||'').trim().replace(/\s/g,'').replace(/^0+/,'');
 }
 
-/* =========================
-FILE 1 - COMPARATIVO
-========================= */
+/* =====================
+COMPARATIVO (ROBUSTO)
+===================== */
 file1.onchange=e=>{
 const r=new FileReader();
 r.onload=ev=>{
@@ -189,26 +107,30 @@ base=[];
 
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
-if(c.length<10)continue;
+if(c.length<8) continue;
+
+const codigo = norm(c[0]);
+if(!codigo) continue;
 
 base.push({
-codigo:norm(c[0]),
-desc:c[1],
-local:c[2],
-qtd:parseFloat(String(c[6]).replace(',','.'))||0,
-valor:parseFloat(String(c[9]).replace(',','.'))||0
+codigo,
+desc:c[1]||'',
+local:c[2]||'',
+qtd:parseFloat((c[6]||'0').replace(',','.'))||0,
+valor:Math.abs(parseFloat((c[9]||'0').replace(',','.'))||0)
 });
 }
 
 view=[...base];
+updateKPIs();
 render(view);
 };
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =========================
-FILE 2 - APANHA
-========================= */
+/* =====================
+APANHA
+===================== */
 file2.onchange=e=>{
 const r=new FileReader();
 r.onload=ev=>{
@@ -217,25 +139,23 @@ apanha={};
 
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
+if(c.length<6) continue;
 
-// 🔴 GARANTE QUE TEM COLUNA DO SEQPRODUTO
-if(c.length < 6) continue;
+const cod=norm(c[5]);
+if(!cod) continue;
 
-const cod = norm(c[5]); // SEQPRODUTO
-
-if(!cod || cod === '') continue;
-
-if(!apanha[cod]) apanha[cod] = [];
-
-apanha[cod].push(`${c[0]}-${c[1]}-${c[2]}-${c[3]}-${c[4]}`);
+if(!apanha[cod]) apanha[cod]=[];
+apanha[cod].push(c[0]);
 }
+updateKPIs();
+render(view);
 };
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =========================
-FILE 3 - PULMÃO
-========================= */
+/* =====================
+PULMÃO
+===================== */
 file3.onchange=e=>{
 const r=new FileReader();
 r.onload=ev=>{
@@ -244,20 +164,39 @@ pulmao={};
 
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
-if(c.length<7)continue;
+if(c.length<5) continue;
 
 const cod=norm(c[5]);
+if(!cod) continue;
 
-if(!pulmao[cod])pulmao[cod]=[];
-pulmao[cod].push(`${c[1]}-${c[2]}-${c[3]}-${c[4]}`);
+if(!pulmao[cod]) pulmao[cod]=[];
+pulmao[cod].push(1);
 }
+updateKPIs();
+render(view);
 };
 r.readAsText(e.target.files[0],'latin1');
 };
 
-/* =========================
+/* =====================
+KPIs
+===================== */
+function updateKPIs(){
+
+document.getElementById('k_total').innerText=base.length;
+
+let a=0;
+for(let k in apanha) a += apanha[k].length;
+document.getElementById('k_apanha').innerText=a;
+
+let p=0;
+for(let k in pulmao) p += pulmao[k].length;
+document.getElementById('k_pulmao').innerText=p;
+}
+
+/* =====================
 RENDER
-========================= */
+===================== */
 function render(list){
 
 const tb=document.getElementById('tb');
@@ -265,162 +204,89 @@ tb.innerHTML='';
 
 list.forEach(x=>{
 
-const tr=document.createElement('tr');
+const ap=apanha[x.codigo]||[];
+const pu=pulmao[x.codigo]||[];
 
-tr.innerHTML=`
-<td><input type="checkbox" class="chk" value="${x.codigo}"></td>
+tb.innerHTML+=`
+<tr>
+<td><input type="checkbox" value="${x.codigo}"></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
-<td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
-<td>${(pulmao[x.codigo]||[]).length}</td>
+<td>${x.valor.toFixed(2)}</td>
+<td>${ap.length?ap.length:'SEM APANHA'}</td>
+<td>${pu.length}</td>
+</tr>
 `;
-
-tb.appendChild(tr);
 });
 }
 
-/* =========================
-FILTROS
-========================= */
+/* =====================
+FILTRO
+===================== */
 function filtrar(){
 
 const c=f_codigo.value.toLowerCase();
 const d=f_desc.value.toLowerCase();
 const l=f_local.value.toLowerCase();
-const q=parseFloat(f_qtd.value)||null;
-const v=parseFloat(f_valor.value)||null;
-const p=parseInt(f_pulmao.value)||null;
+const v=parseFloat(f_valor.value)||0;
 
-view=base.filter(x=>{
-
-const qtdPulmao=(pulmao[x.codigo]||[]).length;
-
-return (
-(!c||x.codigo.includes(c)) &&
-(!d||x.desc.toLowerCase().includes(d)) &&
-(!l||x.local.toLowerCase().includes(l)) &&
-(!q||x.qtd>=q) &&
-(!v||x.valor>=v) &&
-(!p||qtdPulmao==p)
+view=base.filter(x=>
+(!c||x.codigo.includes(c))&&
+(!d||x.desc.toLowerCase().includes(d))&&
+(!l||x.local.toLowerCase().includes(l))&&
+(!v||x.valor>=v)
 );
-
-});
 
 render(view);
 }
 
-/* =========================
-SELECIONAR TODOS
-========================= */
-function toggleAll(el){
-document.querySelectorAll('.chk').forEach(c=>{
-c.checked=el.checked;
-});
+/* =====================
+ORDENAR
+===================== */
+function ordenar(tipo){
+
+if(tipo==='maior')
+view.sort((a,b)=>b.valor-a.valor);
+
+if(tipo==='menor')
+view.sort((a,b)=>a.valor-b.valor);
+
+render(view);
 }
 
-/* =========================
-ORDENAÇÃO
-========================= */
-function ordenar(t){
+/* =====================
+PRINT SIMPLES
+===================== */
+function imprimir(){
 
-let d=[...view];
-
-if(t=='valor') d.sort((a,b)=>b.valor-a.valor);
-if(t=='menorValor') d.sort((a,b)=>a.valor-b.valor);
-if(t=='codigo') d.sort((a,b)=>a.codigo.localeCompare(b.codigo));
-
-render(d);
+window.print();
 }
 
-/* =========================
-EXPORT EXCEL
-========================= */
+/* =====================
+EXCEL
+===================== */
 function exportarExcel(){
 
-const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+const sel=[...document.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
 
-if(!sel.length)return alert('Selecione itens');
-
-const data=sel.map(cod=>{
-const x=base.find(i=>i.codigo==cod);
+const data=sel.map(c=>{
+const x=base.find(b=>b.codigo===c);
 
 return{
-Codigo:cod,
-Descricao:x.desc,
-Local:x.local,
-Qtd:x.qtd,
-Valor:x.valor,
-Apanha:(apanha[cod]||[]).join('|'),
-Pulmao:(pulmao[cod]||[]).join('|'),
-Pulmoes:(pulmao[cod]||[]).length
+Codigo:c,
+Descricao:x?.desc,
+Apanha:(apanha[c]||[]).length,
+Pulmao:(pulmao[c]||[]).length,
+Valor:x?.valor
 };
 });
 
 const ws=XLSX.utils.json_to_sheet(data);
 const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,'Relatorio');
-XLSX.writeFile(wb,'relatorio.xlsx');
-}
-
-/* =========================
-IMPRIMIR (BUG APANHA CORRIGIDO DEFINITIVO)
-========================= */
-function imprimirRelatorio(){
-
-const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
-
-if(!sel.length)return alert('Selecione itens');
-
-let w=window.open('','_blank');
-
-let html=`
-<html>
-<head>
-<title>Relatório CD-107</title>
-<style>
-body{font-family:Arial;padding:20px}
-.item{border:1px solid #ccc;margin:10px;padding:10px}
-h2{background:#eee;padding:5px}
-</style>
-</head>
-<body>
-<h1>RELATÓRIO CD-107 PCP</h1>
-`;
-
-sel.forEach(cod=>{
-
-const x = base.find(i => i.codigo === cod);
-
-html+=`
-<div class="item">
-<h2>${cod} - ${x?.desc || ''}</h2>
-<p>Local: ${x?.local || ''}</p>
-<p>Qtd: ${x?.qtd || 0}</p>
-<p>Valor: ${x?.valor || 0}</p>
-
-<p><b>Apanha:</b> ${
-apanha[cod] && apanha[cod].length
-? apanha[cod].join(', ')
-: '<span style="color:red">SEM APANHA</span>'
-}</p>
-
-<p><b>Pulmão:</b> ${
-pulmao[cod] && pulmao[cod].length
-? pulmao[cod].join(', ')
-: 'SEM PULMÃO'
-}</p>
-
-</div>
-`;
-});
-
-html+=`</body></html>`;
-
-w.document.write(html);
-w.document.close();
-w.print();
+XLSX.utils.book_append_sheet(wb,ws,"Relatorio");
+XLSX.writeFile(wb,"relatorio.xlsx");
 }
 
 </script>
