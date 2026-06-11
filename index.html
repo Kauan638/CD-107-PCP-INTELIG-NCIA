@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS Auditoria</title>
+<title>CD-107 WMS Auditoria PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -27,7 +27,7 @@ overflow:auto;
 }
 
 .sidebar h2{
-font-size:14px;
+font-size:13px;
 color:#94a3b8;
 margin-top:15px;
 }
@@ -52,11 +52,13 @@ flex:1;
 padding:20px;
 }
 
+h1{margin-top:0}
+
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
 font-size:13px;
+margin-top:10px;
 }
 
 th,td{
@@ -65,6 +67,21 @@ border-bottom:1px solid #334155;
 }
 
 tr:hover{background:#1e293b}
+
+/* FILTERS */
+.filters{
+display:flex;
+gap:6px;
+flex-wrap:wrap;
+margin-top:10px;
+}
+
+.filters input{
+padding:6px;
+border:none;
+border-radius:6px;
+outline:none;
+}
 
 /* MODAL */
 .modal{
@@ -94,20 +111,17 @@ margin-bottom:10px;
 border-radius:8px;
 }
 
-/* FILTERS */
-.filters{
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-margin-top:10px;
+/* MAPA */
+.box-cd{
+background:#1e293b;
+padding:10px;
+border-radius:6px;
+font-size:11px;
+cursor:pointer;
+text-align:center;
 }
 
-.filters input{
-padding:6px;
-border-radius:6px;
-border:none;
-outline:none;
-}
+.box-cd:hover{background:#2563eb}
 
 /* PRINT */
 @media print{
@@ -124,16 +138,27 @@ outline:none;
 <div class="sidebar">
 
 <h2>📥 Uploads</h2>
-
 <input type="file" id="file1">
 <input type="file" id="file2">
 <input type="file" id="file3">
 
 <button class="btn" onclick="exportarExcel()">📤 Exportar Excel</button>
 <button class="btn" onclick="imprimirRelatorio()">🖨️ Imprimir Relatório</button>
+<button class="btn" onclick="abrirMapaCD()">🗺️ Mapa do CD</button>
 
 <h2>📊 Status</h2>
 <div id="status"></div>
+
+<h2>🔃 Ordenação</h2>
+
+<button class="btn" onclick="ordenar('codigo')">Código A→Z</button>
+<button class="btn" onclick="ordenar('codigoDesc')">Código Z→A</button>
+<button class="btn" onclick="ordenar('desc')">Descrição A→Z</button>
+<button class="btn" onclick="ordenar('descDesc')">Descrição Z→A</button>
+<button class="btn" onclick="ordenar('local')">Local A→Z</button>
+<button class="btn" onclick="ordenar('localDesc')">Local Z→A</button>
+<button class="btn" onclick="ordenar('valor')">Maior Valor</button>
+<button class="btn" onclick="ordenar('valorDesc')">Menor Valor</button>
 
 </div>
 
@@ -142,13 +167,12 @@ outline:none;
 
 <h1>CD-107 WMS Auditoria</h1>
 
-<!-- FILTROS -->
 <div class="filters">
 <input id="f_codigo" placeholder="Código" oninput="filtrarTabela()">
 <input id="f_desc" placeholder="Descrição" oninput="filtrarTabela()">
 <input id="f_local" placeholder="Local" oninput="filtrarTabela()">
-<input id="f_qtd" placeholder="Qtd mínima" oninput="filtrarTabela()">
-<input id="f_valor" placeholder="Valor mínimo" oninput="filtrarTabela()">
+<input id="f_qtd" placeholder="Qtd min" oninput="filtrarTabela()">
+<input id="f_valor" placeholder="Valor min" oninput="filtrarTabela()">
 </div>
 
 <table>
@@ -167,7 +191,7 @@ outline:none;
 
 </div>
 
-<!-- MODAL -->
+<!-- MODAL PRODUTO -->
 <div class="modal" id="modal" onclick="this.style.display='none'">
 <div class="modal-content" onclick="event.stopPropagation()">
 
@@ -184,37 +208,44 @@ outline:none;
 </div>
 
 <div class="section">
-<h3>📊 Divergência</h3>
+<h3>📊 Dados</h3>
 <div id="div"></div>
 </div>
 
 </div>
 </div>
 
+<!-- MAPA CD -->
+<div class="modal" id="mapaCD" onclick="this.style.display='none'">
+<div class="modal-content" style="width:90%;height:90%;overflow:auto">
+
+<h2>🗺️ MAPA DO CD</h2>
+<div id="gridCD" style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"></div>
+
+</div>
+</div>
+
 <script>
 
-let comparativo = [];
-let apanha = {};
-let pulmao = [];
+let comparativo=[];
+let apanha={};
+let pulmao={};
+let tabelaAtual=[];
 
-/* ================= UTIL ================= */
+/* PARSER */
 function parseBR(v){
-return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+return parseFloat(String(v).replace(/\./g,'').replace(',','.'))||0;
 }
 
-/* ================= FILE 1 ================= */
-document.getElementById('file1').onchange = e=>{
-const f = e.target.files[0];
-const r = new FileReader();
-
-r.onload = ev=>{
-const lines = ev.target.result.split(/\r?\n/);
-comparativo = [];
-
+/* FILE 1 */
+file1.onchange=e=>{
+const r=new FileReader();
+r.onload=ev=>{
+const lines=ev.target.result.split(/\r?\n/);
+comparativo=[];
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length<10) continue;
-
+const c=lines[i].split(';');
+if(c.length<10)continue;
 comparativo.push({
 codigo:c[0],
 desc:c[1],
@@ -223,204 +254,178 @@ qtd:parseBR(c[6]),
 valor:parseBR(c[9])
 });
 }
-
-renderTableCustom(comparativo);
-updateStatus();
+tabelaAtual=comparativo;
+render(tabelaAtual);
+status();
+};
+r.readAsText(e.target.files[0],'latin1');
 };
 
-r.readAsText(f,'latin1');
-};
-
-/* ================= FILE 2 APANHA ================= */
-document.getElementById('file2').onchange = e=>{
-const f = e.target.files[0];
-const r = new FileReader();
-
-r.onload = ev=>{
-const lines = ev.target.result.split(/\r?\n/);
-apanha = {};
-
+/* FILE 2 */
+file2.onchange=e=>{
+const r=new FileReader();
+r.onload=ev=>{
+const lines=ev.target.result.split(/\r?\n/);
+apanha={};
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length<3) continue;
-
-const end = c[0];
-const cod = c[5];
-
-if(!apanha[cod]) apanha[cod]=[];
+const c=lines[i].split(';');
+if(c.length<3)continue;
+const cod=c[5];
+const end=c[0];
+if(!apanha[cod])apanha[cod]=[];
 apanha[cod].push(end);
 }
 };
-
-r.readAsText(f,'latin1');
+r.readAsText(e.target.files[0],'latin1');
 };
 
-/* ================= FILE 3 PULMÃO ================= */
-document.getElementById('file3').onchange = e=>{
-const f = e.target.files[0];
-const r = new FileReader();
-
-r.onload = ev=>{
-const lines = ev.target.result.split(/\r?\n/);
-pulmao = {};
-
+/* FILE 3 */
+file3.onchange=e=>{
+const r=new FileReader();
+r.onload=ev=>{
+const lines=ev.target.result.split(/\r?\n/);
+pulmao={};
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length<7) continue;
-
-const cod = c[5];
-
-if(!pulmao[cod]) pulmao[cod]=[];
-
-pulmao[cod].push({
-endereco:`${c[1]}-${c[2]}-${c[3]}-${c[4]}`,
-status:c[8]
-});
+const c=lines[i].split(';');
+if(c.length<7)continue;
+const cod=c[5];
+if(!pulmao[cod])pulmao[cod]=[];
+pulmao[cod].push({endereco:`${c[1]}-${c[2]}-${c[3]}-${c[4]}`,status:c[8]});
 }
 };
-
-r.readAsText(f,'latin1');
+r.readAsText(e.target.files[0],'latin1');
 };
 
-/* ================= TABELA ================= */
-function renderTableCustom(list){
-
-const tb = document.getElementById('tb');
+/* TABLE */
+function render(list){
 tb.innerHTML='';
-
 list.forEach(x=>{
-
-const tr = document.createElement('tr');
-
-/* FIX CHECKBOX CLICK */
-tr.addEventListener('click',(e)=>{
-if(e.target.type==='checkbox') return;
-openProduct(x.codigo);
+const tr=document.createElement('tr');
+tr.addEventListener('click',e=>{
+if(e.target.type==='checkbox')return;
+open(x.codigo);
 });
-
 tr.innerHTML=`
 <td><input type="checkbox" class="chk" value="${x.codigo}"></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
-<td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
-`;
-
+<td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>`;
 tb.appendChild(tr);
 });
 }
 
-/* ================= MODAL ================= */
-function openProduct(cod){
-
-const c = comparativo.find(x=>x.codigo==cod);
-
-document.getElementById('modal').style.display='flex';
-
-document.getElementById('title').innerText =
-`Produto ${cod} - ${c?.desc||''}`;
-
-document.getElementById('apanha').innerHTML =
-(apanha[cod]||[]).join('<br>') || 'Sem apanha';
-
-document.getElementById('pulmao').innerHTML =
-(pulmao[cod]||[]).map(x=>`${x.endereco} (${x.status})`).join('<br>') || 'Sem pulmão';
-
-document.getElementById('div').innerHTML = `
-Qtd: ${c?.qtd||0}<br>
-Valor: ${(c?.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
-`;
-}
-
-/* ================= FILTRO ================= */
+/* FILTER */
 function filtrarTabela(){
+const c=f_codigo.value.toLowerCase();
+const d=f_desc.value.toLowerCase();
+const l=f_local.value.toLowerCase();
+const q=parseFloat(f_qtd.value)||null;
+const v=parseFloat(f_valor.value)||null;
 
-const c = f_codigo.value.toLowerCase();
-const d = f_desc.value.toLowerCase();
-const l = f_local.value.toLowerCase();
-const q = parseFloat(f_qtd.value)||null;
-const v = parseFloat(f_valor.value)||null;
-
-const f = comparativo.filter(x=>
-(!c || x.codigo.includes(c)) &&
-(!d || x.desc.toLowerCase().includes(d)) &&
-(!l || x.local.toLowerCase().includes(l)) &&
-(!q || x.qtd>=q) &&
-(!v || x.valor>=v)
+const f=comparativo.filter(x=>
+(!c||x.codigo.includes(c))&&
+(!d||x.desc.toLowerCase().includes(d))&&
+(!l||x.local.toLowerCase().includes(l))&&
+(!q||x.qtd>=q)&&
+(!v||x.valor>=v)
 );
 
-renderTableCustom(f);
+tabelaAtual=f;
+render(f);
 }
 
-/* ================= SELECT ALL ================= */
-function toggleAll(el){
-document.querySelectorAll('.chk').forEach(x=>x.checked=el.checked);
+/* SORT */
+function ordenar(t){
+let d=[...tabelaAtual];
+if(t==='codigo')d.sort((a,b)=>a.codigo.localeCompare(b.codigo));
+if(t==='codigoDesc')d.sort((a,b)=>b.codigo.localeCompare(a.codigo));
+if(t==='desc')d.sort((a,b)=>a.desc.localeCompare(b.desc));
+if(t==='descDesc')d.sort((a,b)=>b.desc.localeCompare(a.desc));
+if(t==='local')d.sort((a,b)=>a.local.localeCompare(b.local));
+if(t==='localDesc')d.sort((a,b)=>b.local.localeCompare(a.local));
+if(t==='valor')d.sort((a,b)=>b.valor-a.valor);
+if(t==='valorDesc')d.sort((a,b)=>a.valor-b.valor);
+render(d);
 }
 
-/* ================= EXCEL ================= */
+/* MODAL */
+function open(cod){
+const c=comparativo.find(x=>x.codigo==cod);
+modal.style.display='flex';
+title.innerText=`${cod} - ${c.desc}`;
+apanha.innerHTML=(apanha[cod]||[]).join('<br>')||'Sem apanha';
+pulmao.innerHTML=(pulmao[cod]||[]).map(x=>x.endereco).join('<br>')||'Sem pulmão';
+div.innerHTML=`Qtd: ${c.qtd}<br>Valor: ${c.valor}`;
+}
+
+/* EXCEL */
 function exportarExcel(){
-
-const sel = [...document.querySelectorAll('.chk:checked')].map(x=>x.value);
-
-if(!sel.length) return alert("Selecione itens");
-
-const data = sel.map(cod=>{
-const c = comparativo.find(x=>x.codigo==cod);
-
+const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+if(!sel.length)return alert('Selecione itens');
+const data=sel.map(cod=>{
+const c=comparativo.find(x=>x.codigo==cod);
 return{
 Codigo:cod,
-Descricao:c?.desc,
-Local:c?.local,
-Qtd:c?.qtd,
-Valor:c?.valor,
-Apanha:(apanha[cod]||[]).join(' | '),
-Pulmao:(pulmao[cod]||[]).map(x=>x.endereco).join(' | ')
+Descricao:c.desc,
+Local:c.local,
+Qtd:c.qtd,
+Valor:c.valor,
+Apanha:(apanha[cod]||[]).join('|'),
+Pulmao:(pulmao[cod]||[]).map(x=>x.endereco).join('|')
 };
 });
-
-const ws = XLSX.utils.json_to_sheet(data);
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Auditoria");
-
-XLSX.writeFile(wb,"auditoria.xlsx");
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,'Auditoria');
+XLSX.writeFile(wb,'auditoria.xlsx');
 }
 
-/* ================= PRINT ================= */
+/* PRINT */
 function imprimirRelatorio(){
+const sel=[...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+if(!sel.length)return alert('Selecione itens');
 
-const sel = [...document.querySelectorAll('.chk:checked')].map(x=>x.value);
-
-if(!sel.length) return alert("Selecione itens");
-
-let html = `<h1>RELATÓRIO WMS AUDITORIA</h1><hr>`;
-
+let html='<h1>RELATÓRIO WMS</h1><hr>';
 sel.forEach(cod=>{
-const c = comparativo.find(x=>x.codigo==cod);
-
-html+=`
-<div style="border:1px solid #ccc;padding:10px;margin:10px 0">
-<h3>${cod} - ${c?.desc}</h3>
-<p><b>Local:</b> ${c?.local}</p>
-<p><b>Qtd:</b> ${c?.qtd}</p>
-<p><b>Valor:</b> ${c?.valor}</p>
-<p><b>Apanha:</b> ${(apanha[cod]||[]).join(', ')}</p>
-<p><b>Pulmão:</b> ${(pulmao[cod]||[]).map(x=>x.endereco).join(', ')}</p>
+const c=comparativo.find(x=>x.codigo==cod);
+html+=`<div style="border:1px solid #ccc;padding:10px;margin:10px 0">
+<h3>${cod} - ${c.desc}</h3>
+<p>Local: ${c.local}</p>
+<p>Qtd: ${c.qtd}</p>
+<p>Valor: ${c.valor}</p>
+<p>Apanha: ${(apanha[cod]||[]).join(', ')}</p>
+<p>Pulmão: ${(pulmao[cod]||[]).map(x=>x.endereco).join(', ')}</p>
 </div>`;
 });
-
-const w = window.open();
+const w=window.open();
 w.document.write(html);
 w.print();
 }
 
-/* ================= STATUS ================= */
-function updateStatus(){
-document.getElementById('status').innerHTML=`
-Produtos: ${comparativo.length}<br>
-Apanha: ${Object.keys(apanha).length}<br>
-Pulmão: ${Object.keys(pulmao).length}
-`;
+/* STATUS */
+function status(){
+document.getElementById('status').innerHTML=
+`Itens: ${comparativo.length}<br>Apanha: ${Object.keys(apanha).length}<br>Pulmão: ${Object.keys(pulmao).length}`;
+}
+
+/* MAPA */
+function abrirMapaCD(){
+mapaCD.style.display='flex';
+gridCD.innerHTML='';
+const map={};
+comparativo.forEach(x=>{
+if(!map[x.local])map[x.local]=[];
+map[x.local].push(x);
+});
+Object.keys(map).forEach(l=>{
+const div=document.createElement('div');
+div.className='box-cd';
+div.innerHTML=`${l}<br>${map[l].length}`;
+div.onclick=()=>alert(map[l].map(p=>p.codigo+' '+p.desc).join('\n'));
+gridCD.appendChild(div);
+});
 }
 
 </script>
