@@ -111,14 +111,12 @@ border-bottom:1px solid #1f2937;
 
 <div class="container">
 
-<!-- KPI -->
 <div class="kpi">
 <div>📦 Itens: <b id="k1">0</b></div>
 <div>📍 Apanhas: <b id="k2">0</b></div>
 <div>🏭 Pulmões: <b id="k3">0</b></div>
 </div>
 
-<!-- UPLOADS -->
 <div class="upload">
 <input type="file" id="file1">
 <small>Comparativo</small>
@@ -134,7 +132,6 @@ border-bottom:1px solid #1f2937;
 <small>Pulmão</small>
 </div>
 
-<!-- FILTROS -->
 <div class="filters">
 <input id="f_codigo" placeholder="Código">
 <input id="f_desc" placeholder="Descrição">
@@ -161,7 +158,7 @@ border-bottom:1px solid #1f2937;
 <th>Local</th>
 <th>Qtd</th>
 <th>Valor</th>
-<th>Apanha</th>
+<th>Apanha (endereços)</th>
 <th>Pulmões (endereços)</th>
 </tr>
 </thead>
@@ -209,7 +206,7 @@ kpi();
 };
 
 /* =========================
-APANHA
+APANHA (ENDEREÇOS AGORA)
 ========================= */
 file2.onchange = async e=>{
 const lines=(await e.target.files[0].text()).split(/\r?\n/);
@@ -218,12 +215,18 @@ apanhaMap={};
 
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
+
 const seq=(c[1]||'').trim();
 
+// endereço completo apanha (ajuste se quiser)
+const ender=`${c[0]}-${c[1]}-${c[2]}-${c[3]}-${c[4]}`;
+
 if(seq){
-apanhaMap[seq]=(apanhaMap[seq]||0)+1;
+if(!apanhaMap[seq]) apanhaMap[seq]=[];
+apanhaMap[seq].push(ender);
 }
 }
+
 kpi();
 render();
 };
@@ -239,7 +242,7 @@ pulmaoMap={};
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
 
-const seq=(c[5]||'').trim(); // SEQPRODUTO
+const seq=(c[5]||'').trim();
 const ender=`${c[1]}-${c[2]}-${c[3]}-${c[4]}`;
 
 if(seq){
@@ -261,7 +264,8 @@ let html='';
 
 for(let x of view){
 
-const pulm = pulmaoMap[x.codigo] || [];
+const ap = apanhaMap[x.codigo] || [];
+const pu = pulmaoMap[x.codigo] || [];
 
 html+=`
 <tr>
@@ -271,8 +275,9 @@ html+=`
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${apanhaMap[x.codigo]||'SEM APANHA'}</td>
-<td>${pulm.length ? pulm.join(', ') : 'SEM PULMÃO'}</td>
+
+<td>${ap.length ? ap.join('<br>') : 'SEM APANHA'}</td>
+<td>${pu.length ? pu.join('<br>') : 'SEM PULMÃO'}</td>
 </tr>`;
 }
 
@@ -297,20 +302,20 @@ render();
 }
 
 /* =========================
-FILTRO PULMÃO
+FILTRO
 ========================= */
 function aplicarFiltros(){
 
 const cod=f_codigo.value.toLowerCase();
 const desc=f_desc.value.toLowerCase();
 const local=f_local.value.toLowerCase();
-const min=parse(v_f_min.value);
-const max=parse(v_f_max.value);
+const min=parse(f_min.value);
+const max=parse(f_max.value);
 const minPulmao=parseInt(f_pulmao.value||0);
 
 view=base.filter(x=>{
 
-const pulm=(pulmaoMap[x.codigo]||[]).length;
+const pu=(pulmaoMap[x.codigo]||[]).length;
 
 return (
 (!cod||x.codigo.toLowerCase().includes(cod)) &&
@@ -318,7 +323,7 @@ return (
 (!local||x.local.toLowerCase().includes(local)) &&
 (!min||x.valor>=min) &&
 (!max||x.valor<=max) &&
-(!minPulmao||pulm>=minPulmao)
+(!minPulmao||pu>=minPulmao)
 );
 });
 
@@ -340,7 +345,7 @@ Descricao:x.desc,
 Local:x.local,
 Qtd:x.qtd,
 Valor:x.valor,
-Apanha:apanhaMap[x.codigo]||0,
+Apanha:(apanhaMap[x.codigo]||[]).length,
 Pulmoes:(pulmaoMap[x.codigo]||[]).length
 }));
 
@@ -359,13 +364,14 @@ let w=window.open('');
 w.document.write('<h2>RELATÓRIO WMS CD-107</h2>');
 
 view.forEach(x=>{
-const pulm=pulmaoMap[x.codigo]||[];
+const ap=apanhaMap[x.codigo]||[];
+const pu=pulmaoMap[x.codigo]||[];
 
 w.document.write(`
 <div style="border-bottom:1px solid #ccc;padding:10px">
 <b>${x.codigo}</b> - ${x.desc}<br>
-Apanha: ${apanhaMap[x.codigo]||'SEM APANHA'}<br>
-Pulmões:<br>${pulm.join('<br>') || 'SEM PULMÃO'}
+Apanha:<br>${ap.join('<br>')||'SEM APANHA'}<br><br>
+Pulmões:<br>${pu.join('<br>')||'SEM PULMÃO'}
 </div>
 `);
 });
@@ -381,7 +387,7 @@ function kpi(){
 k1.innerText=base.length;
 
 let a=0,p=0;
-for(let k in apanhaMap)a+=apanhaMap[k];
+for(let k in apanhaMap)a+=(apanhaMap[k]||[]).length;
 for(let k in pulmaoMap)p+=(pulmaoMap[k]||[]).length;
 
 k2.innerText=a;
