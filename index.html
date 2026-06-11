@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 PCP INTELIGÊNCIA</title>
+<title>CD-107 WMS FINAL PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -56,30 +56,28 @@ width:0%;
 background:#22c55e;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-font-size:12px;
-}
-
-th{
-background:#111827;
-position:sticky;
-top:0;
+input,select{
 padding:10px;
-}
-
-td{
-padding:8px;
-border-bottom:1px solid #1f2937;
-}
-
-.table{
-margin-top:10px;
+margin-top:8px;
+background:#111827;
 border:1px solid #1f2937;
-border-radius:10px;
-overflow:auto;
-max-height:500px;
+color:#fff;
+border-radius:8px;
+width:100%;
+}
+
+.filters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:8px;
+margin-top:10px;
+}
+
+.actions{
+margin-top:10px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
 }
 
 button{
@@ -89,16 +87,42 @@ color:#fff;
 padding:8px 12px;
 border-radius:8px;
 cursor:pointer;
-margin-right:6px;
 }
 
-button:hover{opacity:0.85}
+button:hover{opacity:.85}
+
+.table{
+margin-top:10px;
+border:1px solid #1f2937;
+border-radius:10px;
+overflow:auto;
+max-height:500px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
+
+th{
+position:sticky;
+top:0;
+background:#111827;
+padding:10px;
+cursor:pointer;
+}
+
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
+}
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 PCP INTELIGÊNCIA</header>
+<header>📊 CD-107 WMS FINAL PRO</header>
 
 <div class="container">
 
@@ -113,23 +137,36 @@ button:hover{opacity:0.85}
 <div class="upload">
 <input type="file" id="file1">
 <div class="bar"><div id="b1" class="bar-fill"></div></div>
-<small>Comparativo de estoque</small>
+<small>Comparativo</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file2">
 <div class="bar"><div id="b2" class="bar-fill"></div></div>
-<small>Apanhas</small>
+<small>Apanha</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file3">
 <div class="bar"><div id="b3" class="bar-fill"></div></div>
-<small>Pulmões</small>
+<small>Pulmão</small>
+</div>
+
+<!-- FILTROS -->
+<div class="filters">
+<input id="f_codigo" placeholder="Código">
+<input id="f_desc" placeholder="Descrição">
+<input id="f_local" placeholder="Local">
+<input id="f_min" placeholder="Valor mínimo">
+<input id="f_max" placeholder="Valor máximo">
 </div>
 
 <!-- AÇÕES -->
-<div style="margin-top:10px">
+<div class="actions">
+<button onclick="ordenar('az')">A-Z</button>
+<button onclick="ordenar('za')">Z-A</button>
+<button onclick="ordenar('maior')">Maior valor</button>
+<button onclick="ordenar('menor')">Menor valor</button>
 <button onclick="exportar()">Excel</button>
 <button onclick="imprimir()">Imprimir</button>
 </div>
@@ -142,8 +179,8 @@ button:hover{opacity:0.85}
 <th>Código</th>
 <th>Descrição</th>
 <th>Local</th>
-<th>Qtd Divergente</th>
-<th>Valor Divergente</th>
+<th>Qtd</th>
+<th>Valor</th>
 <th>Apanha</th>
 <th>Pulmão</th>
 </tr>
@@ -157,24 +194,16 @@ button:hover{opacity:0.85}
 <script>
 
 let base = [];
+let view = [];
 let apanha = {};
 let pulmao = {};
 
-let view = [];
-
-/* =========================
-UTIL NÚMERO BR
-========================= */
 function parseBR(v){
-return parseFloat(
-String(v || "0")
-.replace(/\./g,'')
-.replace(',','.')
-) || 0;
+return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 }
 
 /* =========================
-UPLOAD COMPARATIVO
+COMPARATIVO
 ========================= */
 document.getElementById('file1').addEventListener('change', async e=>{
 
@@ -184,30 +213,23 @@ const lines = text.split(/\r?\n/);
 base = [];
 
 for(let i=1;i<lines.length;i++){
-
 const c = lines[i].split(';');
 if(c.length < 10) continue;
 
 base.push({
-codigo: c[0],
-desc: c[1],
-local: c[2],
-qtd: parseBR(c[6]),
-valor: parseBR(c[9])
+codigo:c[0],
+desc:c[1],
+local:c[2],
+qtd:parseBR(c[6]),
+valor:parseBR(c[9])
 });
-
-if(i % 500 === 0){
-document.getElementById('b1').style.width =
-Math.floor((i/lines.length)*100)+'%';
-}
 }
 
-view = base;
+view = [...base];
 render();
 kpi();
 
 document.getElementById('b1').style.width='100%';
-
 });
 
 /* =========================
@@ -225,14 +247,11 @@ const c = lines[i].split(';');
 if(c.length < 6) continue;
 
 const cod = c[5];
-if(!cod) continue;
-
-apanha[cod] = (apanha[cod] || 0) + 1;
+apanha[cod] = (apanha[cod]||0)+1;
 }
 
-document.getElementById('b2').style.width='100%';
 kpi();
-
+document.getElementById('b2').style.width='100%';
 });
 
 /* =========================
@@ -250,39 +269,79 @@ const c = lines[i].split(';');
 if(c.length < 6) continue;
 
 const cod = c[5];
-if(!cod) continue;
-
-pulmao[cod] = (pulmao[cod] || 0) + 1;
+pulmao[cod] = (pulmao[cod]||0)+1;
 }
 
-document.getElementById('b3').style.width='100%';
 kpi();
+document.getElementById('b3').style.width='100%';
+});
+
+/* =========================
+FILTROS
+========================= */
+function aplicarFiltros(){
+
+const cod = document.getElementById('f_codigo').value.toLowerCase();
+const desc = document.getElementById('f_desc').value.toLowerCase();
+const local = document.getElementById('f_local').value.toLowerCase();
+const min = parseBR(document.getElementById('f_min').value);
+const max = parseBR(document.getElementById('f_max').value);
+
+view = base.filter(x=>{
+
+return (
+(!cod || x.codigo.toLowerCase().includes(cod)) &&
+(!desc || x.desc.toLowerCase().includes(desc)) &&
+(!local || x.local.toLowerCase().includes(local)) &&
+(!min || x.valor >= min) &&
+(!max || x.valor <= max)
+);
 
 });
+
+render();
+}
+
+document.querySelectorAll('input').forEach(i=>{
+i.addEventListener('keyup', aplicarFiltros);
+});
+
+/* =========================
+ORDENAÇÃO
+========================= */
+function ordenar(tipo){
+
+if(tipo==='az') view.sort((a,b)=>a.codigo.localeCompare(b.codigo));
+if(tipo==='za') view.sort((a,b)=>b.codigo.localeCompare(a.codigo));
+if(tipo==='maior') view.sort((a,b)=>b.valor-a.valor);
+if(tipo==='menor') view.sort((a,b)=>a.valor-b.valor);
+
+render();
+}
 
 /* =========================
 RENDER
 ========================= */
 function render(){
 
-const tb = document.getElementById('tb');
-tb.innerHTML = '';
+let html='';
 
 for(let i=0;i<view.length;i++){
+const x=view[i];
 
-const x = view[i];
-
-tb.innerHTML += `
+html += `
 <tr>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${apanha[x.codigo] || 'SEM'}</td>
-<td>${pulmao[x.codigo] || 'SEM'}</td>
+<td>${apanha[x.codigo]||'SEM'}</td>
+<td>${pulmao[x.codigo]||'SEM'}</td>
 </tr>`;
 }
+
+document.getElementById('tb').innerHTML = html;
 }
 
 /* =========================
@@ -292,37 +351,33 @@ function kpi(){
 
 document.getElementById('k1').innerText = base.length;
 
-let a = 0;
-let p = 0;
-
-for(let k in apanha) a += apanha[k];
-for(let k in pulmao) p += pulmao[k];
+let a=0,p=0;
+for(let k in apanha)a+=apanha[k];
+for(let k in pulmao)p+=pulmao[k];
 
 document.getElementById('k2').innerText = a;
 document.getElementById('k3').innerText = p;
-
 }
 
 /* =========================
-EXPORT EXCEL
+EXPORT
 ========================= */
 function exportar(){
 
-const data = view.map(x => ({
-Código: x.codigo,
-Descrição: x.desc,
-Local: x.local,
-Qtd: x.qtd,
-Valor: x.valor,
-Apanha: apanha[x.codigo] || 0,
-Pulmão: pulmao[x.codigo] || 0
+const data = view.map(x=>({
+Codigo:x.codigo,
+Descricao:x.desc,
+Local:x.local,
+Qtd:x.qtd,
+Valor:x.valor,
+Apanha:apanha[x.codigo]||0,
+Pulmao:pulmao[x.codigo]||0
 }));
 
 const ws = XLSX.utils.json_to_sheet(data);
 const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, "CD107");
-
-XLSX.writeFile(wb, "CD107.xlsx");
+XLSX.utils.book_append_sheet(wb,ws,"CD107");
+XLSX.writeFile(wb,"CD107.xlsx");
 }
 
 /* =========================
