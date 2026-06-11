@@ -42,20 +42,6 @@ border:1px solid #1f2937;
 border-radius:10px;
 }
 
-.bar{
-height:6px;
-background:#1f2937;
-border-radius:10px;
-overflow:hidden;
-margin-top:6px;
-}
-
-.bar-fill{
-height:100%;
-width:0%;
-background:#22c55e;
-}
-
 input,select{
 padding:10px;
 margin-top:8px;
@@ -64,13 +50,6 @@ border:1px solid #1f2937;
 color:#fff;
 border-radius:8px;
 width:100%;
-}
-
-.filters{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:8px;
-margin-top:10px;
 }
 
 .actions{
@@ -88,8 +67,6 @@ padding:8px 12px;
 border-radius:8px;
 cursor:pointer;
 }
-
-button:hover{opacity:.85}
 
 .table{
 margin-top:10px;
@@ -110,7 +87,6 @@ position:sticky;
 top:0;
 background:#111827;
 padding:10px;
-cursor:pointer;
 }
 
 td{
@@ -118,10 +94,7 @@ padding:8px;
 border-bottom:1px solid #1f2937;
 }
 
-.chk{
-transform:scale(1.2);
-cursor:pointer;
-}
+.chk{transform:scale(1.2)}
 </style>
 </head>
 
@@ -131,55 +104,23 @@ cursor:pointer;
 
 <div class="container">
 
-<!-- KPI -->
 <div class="kpi">
 <div>📦 Itens: <b id="k1">0</b></div>
 <div>📍 Apanhas: <b id="k2">0</b></div>
 <div>🏭 Pulmões: <b id="k3">0</b></div>
 </div>
 
-<!-- UPLOADS -->
-<div class="upload">
-<input type="file" id="file1">
-<small>Comparativo</small>
-</div>
+<div class="upload"><input type="file" id="file1"><small>Comparativo</small></div>
+<div class="upload"><input type="file" id="file2"><small>Apanha</small></div>
+<div class="upload"><input type="file" id="file3"><small>Pulmão</small></div>
 
-<div class="upload">
-<input type="file" id="file2">
-<small>Apanha (ruas fixas)</small>
-</div>
-
-<div class="upload">
-<input type="file" id="file3">
-<small>Pulmão</small>
-</div>
-
-<!-- FILTROS -->
-<div class="filters">
-<input id="f_codigo" placeholder="Código">
-<input id="f_desc" placeholder="Descrição">
-<input id="f_local" placeholder="Local">
-<input id="f_min" placeholder="Valor mínimo">
-<input id="f_max" placeholder="Valor máximo">
-</div>
-
-<!-- AÇÕES -->
 <div class="actions">
-
 <button onclick="toggleAll()">Selecionar todos</button>
 <button onclick="clearSel()">Limpar seleção</button>
-
-<button onclick="ordenar('az')">A-Z</button>
-<button onclick="ordenar('za')">Z-A</button>
-<button onclick="ordenar('maior')">Maior valor</button>
-<button onclick="ordenar('menor')">Menor valor</button>
-
 <button onclick="exportar()">Excel</button>
-<button onclick="imprimir()">Imprimir auditoria</button>
-
+<button onclick="imprimir()">Imprimir</button>
 </div>
 
-<!-- TABELA -->
 <div class="table">
 <table>
 <thead>
@@ -202,89 +143,78 @@ cursor:pointer;
 
 <script>
 
-let base = [];
-let view = [];
-let apanha = {};
-let pulmao = {};
-let selected = new Set();
+let base=[], view=[];
+let apanha={}, pulmao={};
+let selected=new Set();
 
-function parseBR(v){
+function parse(v){
 return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 }
 
 /* =========================
 COMPARATIVO
 ========================= */
-document.getElementById('file1').addEventListener('change', async e=>{
-
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
-
-base = [];
+file1.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
+base=[];
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 10) continue;
+const c=lines[i].split(';');
+if(c.length<10) continue;
 
 base.push({
-codigo:c[0],
+codigo:c[0]?.trim(),
 desc:c[1],
 local:c[2],
-qtd:parseBR(c[6]),
-valor:parseBR(c[9])
+qtd:parse(c[6]),
+valor:parse(c[9])
 });
 }
 
-view = [...base];
+view=[...base];
 render();
 kpi();
-});
+};
 
 /* =========================
-APANHA (CORRIGIDO)
+APANHA (CORRIGIDO REAL)
 ========================= */
-document.getElementById('file2').addEventListener('change', async e=>{
+file2.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
 
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
-
-apanha = {};
+apanha={};
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 2) continue;
+const c=lines[i].split(';');
 
-const cod = c[1]; // SEQPRODUTO CORRETO
+// ⚠️ APANHA usa SEQPRODUTO = coluna 1 ou fallback 0
+const cod=(c[1]||c[0]||'').trim();
 
-if(cod && cod !== '')
-apanha[cod] = (apanha[cod]||0) + 1;
+if(cod) apanha[cod]=(apanha[cod]||0)+1;
 }
 
 kpi();
-});
+};
 
 /* =========================
-PULMÃO (CORRIGIDO)
+PULMÃO (CORRIGIDO REAL)
 ========================= */
-document.getElementById('file3').addEventListener('change', async e=>{
+file3.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
 
-const text = await e.target.files[0].text();
-const lines = text.split(/\r?\n/);
-
-pulmao = {};
+pulmao={};
 
 for(let i=1;i<lines.length;i++){
-const c = lines[i].split(';');
-if(c.length < 2) continue;
+const c=lines[i].split(';');
 
-const cod = c[1]; // SEQPRODUTO CORRETO
+// ⚠️ PULMÃO pode vir vazio → tenta 1º SEQPRODUTO, senão ignora
+const cod=(c[5]||c[1]||'').trim();
 
-if(cod && cod !== '')
-pulmao[cod] = (pulmao[cod]||0) + 1;
+if(cod) pulmao[cod]=(pulmao[cod]||0)+1;
 }
 
 kpi();
-});
+};
 
 /* =========================
 RENDER
@@ -293,13 +223,11 @@ function render(){
 
 let html='';
 
-for(let i=0;i<view.length;i++){
+for(let x of view){
 
-const x=view[i];
-
-html += `
+html+=`
 <tr>
-<td><input class="chk" type="checkbox" onchange="selectItem('${x.codigo}',this.checked)" ${selected.has(x.codigo)?'checked':''}></td>
+<td><input type="checkbox" onchange="sel('${x.codigo}',this.checked)" ${selected.has(x.codigo)?'checked':''}></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
@@ -310,15 +238,11 @@ html += `
 </tr>`;
 }
 
-document.getElementById('tb').innerHTML = html;
+tb.innerHTML=html;
 }
 
-/* =========================
-SELEÇÃO
-========================= */
-function selectItem(code,checked){
-if(checked) selected.add(code);
-else selected.delete(code);
+function sel(c,v){
+v?selected.add(c):selected.delete(c);
 }
 
 function toggleAll(){
@@ -328,45 +252,6 @@ render();
 
 function clearSel(){
 selected.clear();
-render();
-}
-
-/* =========================
-FILTROS
-========================= */
-function aplicarFiltros(){
-
-const cod=f_codigo.value.toLowerCase();
-const desc=f_desc.value.toLowerCase();
-const local=f_local.value.toLowerCase();
-const min=parseBR(f_min.value);
-const max=parseBR(f_max.value);
-
-view=base.filter(x=>
-(!cod||x.codigo.toLowerCase().includes(cod))&&
-(!desc||x.desc.toLowerCase().includes(desc))&&
-(!local||x.local.toLowerCase().includes(local))&&
-(!min||x.valor>=min)&&
-(!max||x.valor<=max)
-);
-
-render();
-}
-
-document.querySelectorAll('input').forEach(i=>{
-i.addEventListener('keyup',aplicarFiltros);
-});
-
-/* =========================
-ORDENAÇÃO
-========================= */
-function ordenar(tipo){
-
-if(tipo==='az') view.sort((a,b)=>a.codigo.localeCompare(b.codigo));
-if(tipo==='za') view.sort((a,b)=>b.codigo.localeCompare(a.codigo));
-if(tipo==='maior') view.sort((a,b)=>b.valor-a.valor);
-if(tipo==='menor') view.sort((a,b)=>a.valor-b.valor);
-
 render();
 }
 
@@ -390,9 +275,7 @@ EXPORT
 ========================= */
 function exportar(){
 
-const data=view
-.filter(x=>selected.size===0||selected.has(x.codigo))
-.map(x=>({
+const data=view.map(x=>({
 Codigo:x.codigo,
 Descricao:x.desc,
 Local:x.local,
@@ -413,37 +296,19 @@ IMPRIMIR
 ========================= */
 function imprimir(){
 
-const data=view.filter(x=>selected.size===0||selected.has(x.codigo));
-
 let w=window.open('');
-w.document.write(`
-<html>
-<head>
-<title>WMS AUDITORIA</title>
-<style>
-body{font-family:Segoe UI;padding:20px}
-h2{background:#111827;color:#fff;padding:10px}
-.item{border-bottom:1px solid #ccc;margin-bottom:10px;padding:10px}
-</style>
-</head>
-<body>
-<h2>RELATÓRIO WMS AUDITORIA CD-107</h2>
-`);
+w.document.write(`<h2>RELATÓRIO WMS CD-107</h2>`);
 
-data.forEach(x=>{
+view.forEach(x=>{
 w.document.write(`
-<div class="item">
+<div style="margin-bottom:10px;border-bottom:1px solid #ccc">
 <b>${x.codigo}</b> - ${x.desc}<br>
-Local: ${x.local}<br>
-Qtd: ${x.qtd}<br>
-Valor: ${x.valor}<br>
 Apanha: ${apanha[x.codigo]||'SEM APANHA'}<br>
 Pulmão: ${pulmao[x.codigo]||'SEM PULMÃO'}
 </div>
 `);
 });
 
-w.document.write('</body></html>');
 w.print();
 }
 
