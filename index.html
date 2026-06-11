@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CD-107 WMS INTELIGÊNCIA</title>
+<title>CD-107 WMS Inteligência</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 
@@ -25,12 +26,13 @@ padding:15px;
 height:100vh;
 position:sticky;
 top:0;
+overflow:auto;
 }
 
 .sidebar h2{
 font-size:14px;
 color:#94a3b8;
-margin-top:20px;
+margin-top:15px;
 }
 
 .btn{
@@ -45,38 +47,18 @@ border-radius:8px;
 text-align:left;
 }
 
-.btn:hover{
-background:#2563eb;
-}
+.btn:hover{background:#2563eb}
 
-/* CONTEUDO */
+/* MAIN */
 .main{
 flex:1;
 padding:20px;
 }
 
-.cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-}
-
-.card{
-background:#1e293b;
-padding:15px;
-border-radius:10px;
-}
-
-.valor{
-font-size:20px;
-font-weight:bold;
-}
-
-/* TABELA */
 table{
 width:100%;
-margin-top:15px;
 border-collapse:collapse;
+margin-top:10px;
 }
 
 th,td{
@@ -85,10 +67,7 @@ border-bottom:1px solid #334155;
 font-size:13px;
 }
 
-tr:hover{
-background:#1e293b;
-cursor:pointer;
-}
+tr:hover{background:#1e293b;cursor:pointer}
 
 /* MODAL */
 .modal{
@@ -112,52 +91,106 @@ overflow:auto;
 }
 
 .section{
-margin-bottom:15px;
-padding:10px;
 background:#1e293b;
+padding:10px;
+margin-bottom:10px;
 border-radius:8px;
+}
+
+/* PRINT */
+@media print {
+.sidebar,button,input{display:none !important;}
+.main{width:100%}
 }
 
 </style>
 </head>
+
 <body>
-  <script>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<h2>📥 Uploads</h2>
+<input type="file" id="file1">
+<input type="file" id="file2">
+<input type="file" id="file3">
+
+<button class="btn" onclick="exportarExcel()">📤 Exportar Excel</button>
+<button class="btn" onclick="imprimirRelatorio()">🖨️ Imprimir Relatório</button>
+
+<h2>📊 Status</h2>
+<div id="status"></div>
+
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<h1>Dashboard WMS Auditoria</h1>
+
+<table>
+<thead>
+<tr>
+<th><input type="checkbox" onclick="toggleAll(this)"></th>
+<th>Código</th>
+<th>Descrição</th>
+<th>Local</th>
+<th>Qtd</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="this.style.display='none'">
+<div class="modal-content" onclick="event.stopPropagation()">
+
+<h2 id="title"></h2>
+
+<div class="section">
+<h3>📍 Apanha</h3>
+<div id="apanha"></div>
+</div>
+
+<div class="section">
+<h3>🏭 Pulmão</h3>
+<div id="pulmao"></div>
+</div>
+
+<div class="section">
+<h3>📊 Divergência</h3>
+<div id="div"></div>
+</div>
+
+</div>
+</div>
+
+<script>
 
 let comparativo = [];
-let apanha = [];
-let pulmao = [];
-
-let dados = [];
-
-let selected = null;
-
-document.addEventListener('DOMContentLoaded', ()=>{
-
-document.getElementById('file1').onchange = e=>loadComparativo(e);
-document.getElementById('file2').onchange = e=>loadApanha(e);
-document.getElementById('file3').onchange = e=>loadPulmao(e);
-
-});
+let apanha = {};
+let pulmao = {};
 
 function parseBR(v){
 return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
 }
 
-/* =========================
-   1. COMPARATIVO
-========================= */
-function loadComparativo(e){
-const file = e.target.files[0];
+/* ================= COMPARATIVO ================= */
+document.getElementById('file1').onchange = e=>{
+const f = e.target.files[0];
 const r = new FileReader();
 
 r.onload = ev=>{
 const lines = ev.target.result.split(/\r?\n/);
-
 comparativo = [];
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-if(c.length < 10) continue;
+if(c.length<10) continue;
 
 comparativo.push({
 codigo:c[0],
@@ -168,27 +201,25 @@ valor:parseBR(c[9])
 });
 }
 
-buildTable();
+renderTable();
+updateStatus();
 };
 
-r.readAsText(file,'latin1');
-}
+r.readAsText(f,'latin1');
+};
 
-/* =========================
-   2. APANHA
-========================= */
-function loadApanha(e){
-const file = e.target.files[0];
+/* ================= APANHA ================= */
+document.getElementById('file2').onchange = e=>{
+const f = e.target.files[0];
 const r = new FileReader();
 
 r.onload = ev=>{
 const lines = ev.target.result.split(/\r?\n/);
-
 apanha = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-if(c.length < 3) continue;
+if(c.length<3) continue;
 
 const cod = c[1];
 const end = c[0];
@@ -198,24 +229,21 @@ apanha[cod].push(end);
 }
 };
 
-r.readAsText(file,'latin1');
-}
+r.readAsText(f,'latin1');
+};
 
-/* =========================
-   3. PULMÃO
-========================= */
-function loadPulmao(e){
-const file = e.target.files[0];
+/* ================= PULMAO ================= */
+document.getElementById('file3').onchange = e=>{
+const f = e.target.files[0];
 const r = new FileReader();
 
 r.onload = ev=>{
 const lines = ev.target.result.split(/\r?\n/);
-
 pulmao = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-if(c.length < 7) continue;
+if(c.length<7) continue;
 
 const cod = c[5];
 
@@ -228,13 +256,11 @@ status:c[8]
 }
 };
 
-r.readAsText(file,'latin1');
-}
+r.readAsText(f,'latin1');
+};
 
-/* =========================
-   TABELA PRINCIPAL
-========================= */
-function buildTable(){
+/* ================= TABELA ================= */
+function renderTable(){
 
 const tb = document.getElementById('tb');
 tb.innerHTML='';
@@ -243,9 +269,8 @@ comparativo.forEach(x=>{
 
 const tr = document.createElement('tr');
 
-tr.onclick=()=>openProduct(x.codigo);
-
 tr.innerHTML=`
+<td><input type="checkbox" class="chk" value="${x.codigo}"></td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
@@ -253,99 +278,108 @@ tr.innerHTML=`
 <td>${x.valor.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td>
 `;
 
+tr.onclick=()=>openProduct(x.codigo);
+
 tb.appendChild(tr);
 });
 }
 
-/* =========================
-   PAINEL PRODUTO
-========================= */
+/* ================= MODAL ================= */
 function openProduct(cod){
 
-selected = cod;
+const comp = comparativo.find(x=>x.codigo==cod);
 
 document.getElementById('modal').style.display='flex';
-
-const comp = comparativo.find(x=>x.codigo==cod);
 
 document.getElementById('title').innerText =
 `Produto ${cod} - ${comp?.desc || ''}`;
 
-/* APANHA */
 document.getElementById('apanha').innerHTML =
-(apanha[cod] || []).map(x=>`<div>${x}</div>`).join('') || 'Sem apanha';
+(apanha[cod]||[]).join('<br>') || 'Sem apanha';
 
-/* PULMAO */
 document.getElementById('pulmao').innerHTML =
-(pulmao[cod] || []).map(x=>`
-<div>${x.endereco} (${x.status})</div>
-`).join('') || 'Sem pulmão';
+(pulmao[cod]||[]).map(x=>`${x.endereco} (${x.status})`).join('<br>') || 'Sem pulmão';
 
-/* DIVERGENCIA */
 document.getElementById('div').innerHTML = `
 Qtd: ${comp?.qtd || 0}<br>
-Valor: ${(comp?.valor || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+Valor: ${(comp?.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 `;
 }
 
-function closeModal(){
-document.getElementById('modal').style.display='none';
+/* ================= EXCEL ================= */
+function exportarExcel(){
+
+const selecionados = [...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+
+if(!selecionados.length) return alert("Selecione itens");
+
+const data = [];
+
+selecionados.forEach(cod=>{
+const c = comparativo.find(x=>x.codigo==cod);
+
+data.push({
+Codigo:cod,
+Descricao:c?.desc,
+Local:c?.local,
+Qtd:c?.qtd,
+Valor:c?.valor,
+Apanha:(apanha[cod]||[]).join(' | '),
+Pulmao:(pulmao[cod]||[]).map(x=>x.endereco).join(' | ')
+});
+});
+
+const ws = XLSX.utils.json_to_sheet(data);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Auditoria");
+
+XLSX.writeFile(wb,"auditoria.xlsx");
+}
+
+/* ================= PRINT ================= */
+function imprimirRelatorio(){
+
+const selecionados = [...document.querySelectorAll('.chk:checked')].map(x=>x.value);
+
+if(!selecionados.length) return alert("Selecione itens");
+
+let html = `<h1>RELATÓRIO WMS AUDITORIA</h1><hr>`;
+
+selecionados.forEach(cod=>{
+
+const c = comparativo.find(x=>x.codigo==cod);
+
+html+=`
+<div style="margin-bottom:20px;border:1px solid #ccc;padding:10px">
+<h3>${cod} - ${c?.desc}</h3>
+<p><b>Local:</b> ${c?.local}</p>
+<p><b>Qtd:</b> ${c?.qtd}</p>
+<p><b>Valor:</b> ${c?.valor}</p>
+<p><b>Apanha:</b> ${(apanha[cod]||[]).join(', ')}</p>
+<p><b>Pulmão:</b> ${(pulmao[cod]||[]).map(x=>x.endereco).join(', ')}</p>
+</div>`;
+});
+
+const w = window.open();
+w.document.write(html);
+w.print();
+}
+
+/* ================= STATUS ================= */
+function updateStatus(){
+document.getElementById('status').innerHTML=`
+✔ Produtos: ${comparativo.length}<br>
+✔ Apanha: ${Object.keys(apanha).length}<br>
+✔ Pulmão: ${Object.keys(pulmao).length}
+`;
+}
+
+/* ================= CHECK ALL ================= */
+function toggleAll(el){
+document.querySelectorAll('.chk').forEach(x=>x.checked=el.checked);
 }
 
 </script>
-
-<!-- FILE INPUTS -->
-<div class="sidebar">
-<h2>Uploads</h2>
-<input type="file" id="file1">
-<input type="file" id="file2">
-<input type="file" id="file3">
-
-<h2>Produtos</h2>
-<div id="list"></div>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-<h1>Dashboard WMS Inteligência</h1>
-
-<table>
-<thead>
-<tr>
-<th>Código</th>
-<th>Descrição</th>
-<th>Local</th>
-<th>Qtd</th>
-<th>Valor</th>
-</tr>
-</thead>
-<tbody id="tb"></tbody>
-</table>
-</div>
-
-<!-- MODAL -->
-<div class="modal" id="modal" onclick="closeModal()">
-<div class="modal-content" onclick="event.stopPropagation()">
-
-<h2 id="title"></h2>
-
-<div class="section">
-<h3>Apanha</h3>
-<div id="apanha"></div>
-</div>
-
-<div class="section">
-<h3>Pulmão</h3>
-<div id="pulmao"></div>
-</div>
-
-<div class="section">
-<h3>Divergência</h3>
-<div id="div"></div>
-</div>
-
-</div>
-</div>
 
 </body>
 </html>
