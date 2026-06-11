@@ -146,7 +146,7 @@ cursor:pointer;
 
 <div class="upload">
 <input type="file" id="file2">
-<small>Apanha</small>
+<small>Apanha (ruas fixas)</small>
 </div>
 
 <div class="upload">
@@ -238,11 +238,10 @@ valor:parseBR(c[9])
 view = [...base];
 render();
 kpi();
-
 });
 
 /* =========================
-APANHA
+APANHA (CORRIGIDO)
 ========================= */
 document.getElementById('file2').addEventListener('change', async e=>{
 
@@ -253,16 +252,19 @@ apanha = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-const cod = c[5];
-if(cod) apanha[cod]=(apanha[cod]||0)+1;
+if(c.length < 2) continue;
+
+const cod = c[1]; // SEQPRODUTO CORRETO
+
+if(cod && cod !== '')
+apanha[cod] = (apanha[cod]||0) + 1;
 }
 
 kpi();
-
 });
 
 /* =========================
-PULMÃO
+PULMÃO (CORRIGIDO)
 ========================= */
 document.getElementById('file3').addEventListener('change', async e=>{
 
@@ -273,12 +275,15 @@ pulmao = {};
 
 for(let i=1;i<lines.length;i++){
 const c = lines[i].split(';');
-const cod = c[5];
-if(cod) pulmao[cod]=(pulmao[cod]||0)+1;
+if(c.length < 2) continue;
+
+const cod = c[1]; // SEQPRODUTO CORRETO
+
+if(cod && cod !== '')
+pulmao[cod] = (pulmao[cod]||0) + 1;
 }
 
 kpi();
-
 });
 
 /* =========================
@@ -300,8 +305,8 @@ html += `
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-<td>${apanha[x.codigo]||'SEM'}</td>
-<td>${pulmao[x.codigo]||'SEM'}</td>
+<td>${apanha[x.codigo]||'SEM APANHA'}</td>
+<td>${pulmao[x.codigo]||'SEM PULMÃO'}</td>
 </tr>`;
 }
 
@@ -404,7 +409,7 @@ XLSX.writeFile(wb,"CD107.xlsx");
 }
 
 /* =========================
-IMPRIMIR RELATÓRIO WMS
+IMPRIMIR
 ========================= */
 function imprimir(){
 
