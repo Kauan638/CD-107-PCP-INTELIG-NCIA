@@ -217,12 +217,17 @@ apanha={};
 
 for(let i=1;i<lines.length;i++){
 const c=lines[i].split(';');
-if(c.length<6)continue;
 
-const cod=norm(c[5]);
+// 🔴 GARANTE QUE TEM COLUNA DO SEQPRODUTO
+if(c.length < 6) continue;
 
-if(!apanha[cod])apanha[cod]=[];
-apanha[cod].push(c[0]);
+const cod = norm(c[5]); // SEQPRODUTO
+
+if(!cod || cod === '') continue;
+
+if(!apanha[cod]) apanha[cod] = [];
+
+apanha[cod].push(`${c[0]}-${c[1]}-${c[2]}-${c[3]}-${c[4]}`);
 }
 };
 r.readAsText(e.target.files[0],'latin1');
