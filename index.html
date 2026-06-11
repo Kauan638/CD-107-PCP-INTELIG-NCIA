@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CD-107 PCP INTELIGÊNCIA PRO</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -161,7 +160,7 @@ small{color:#94a3b8}
 <script>
 
 /* =========================
-BASE
+BASES
 ========================= */
 let base=[];
 let view=[];
@@ -169,7 +168,7 @@ let apanha={};
 let pulmao={};
 
 /* =========================
-NORMALIZAÇÃO FORTE (FIX PRINCIPAL)
+NORMALIZAÇÃO (ÚNICA E DEFINITIVA)
 ========================= */
 function norm(v){
 return String(v||'')
@@ -179,7 +178,7 @@ return String(v||'')
 }
 
 /* =========================
-FILE 1
+FILE 1 - COMPARATIVO
 ========================= */
 file1.onchange=e=>{
 const r=new FileReader();
@@ -208,7 +207,7 @@ r.readAsText(e.target.files[0],'latin1');
 };
 
 /* =========================
-FILE 2 APANHA
+FILE 2 - APANHA
 ========================= */
 file2.onchange=e=>{
 const r=new FileReader();
@@ -230,7 +229,7 @@ r.readAsText(e.target.files[0],'latin1');
 };
 
 /* =========================
-FILE 3 PULMÃO
+FILE 3 - PULMÃO
 ========================= */
 file3.onchange=e=>{
 const r=new FileReader();
@@ -278,7 +277,7 @@ tb.appendChild(tr);
 }
 
 /* =========================
-FILTRO COMPLETO
+FILTROS
 ========================= */
 function filtrar(){
 
@@ -317,7 +316,7 @@ c.checked=el.checked;
 }
 
 /* =========================
-ORDENAÇÃO (MAIOR + MENOR VALOR)
+ORDENAÇÃO
 ========================= */
 function ordenar(t){
 
@@ -348,9 +347,9 @@ Descricao:x.desc,
 Local:x.local,
 Qtd:x.qtd,
 Valor:x.valor,
-Apanha:(apanha[norm(cod)]||[]).join('|'),
-Pulmao:(pulmao[norm(cod)]||[]).join('|'),
-Pulmoes:(pulmao[norm(cod)]||[]).length
+Apanha:(apanha[cod]||[]).join('|'),
+Pulmao:(pulmao[cod]||[]).join('|'),
+Pulmoes:(pulmao[cod]||[]).length
 };
 });
 
@@ -361,7 +360,7 @@ XLSX.writeFile(wb,'relatorio.xlsx');
 }
 
 /* =========================
-IMPRIMIR (APANHA CORRIGIDO DEFINITIVO)
+IMPRIMIR (BUG APANHA CORRIGIDO DEFINITIVO)
 ========================= */
 function imprimirRelatorio(){
 
@@ -387,18 +386,26 @@ h2{background:#eee;padding:5px}
 
 sel.forEach(cod=>{
 
-const key=norm(cod);
-const x=base.find(i=>i.codigo==key);
+const x = base.find(i => i.codigo === cod);
 
 html+=`
 <div class="item">
-<h2>${cod} - ${x.desc}</h2>
-<p>Local: ${x.local}</p>
-<p>Qtd: ${x.qtd}</p>
-<p>Valor: ${x.valor}</p>
+<h2>${cod} - ${x?.desc || ''}</h2>
+<p>Local: ${x?.local || ''}</p>
+<p>Qtd: ${x?.qtd || 0}</p>
+<p>Valor: ${x?.valor || 0}</p>
 
-<p><b>Apanha:</b> ${(apanha[key]||[]).length?apanha[key].join(', '):'SEM APANHA'}</p>
-<p><b>Pulmão:</b> ${(pulmao[key]||[]).length?pulmao[key].join(', '):'SEM PULMÃO'}</p>
+<p><b>Apanha:</b> ${
+apanha[cod] && apanha[cod].length
+? apanha[cod].join(', ')
+: '<span style="color:red">SEM APANHA</span>'
+}</p>
+
+<p><b>Pulmão:</b> ${
+pulmao[cod] && pulmao[cod].length
+? pulmao[cod].join(', ')
+: 'SEM PULMÃO'
+}</p>
 
 </div>
 `;
