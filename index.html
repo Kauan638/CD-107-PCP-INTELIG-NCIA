@@ -139,7 +139,7 @@ select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;c
 <input id="f_local" placeholder="Local">
 <input id="f_min" placeholder="Valor mínimo">
 <input id="f_max" placeholder="Valor máximo">
-<input id="f_pulmao" placeholder="Qtd máxima de pulmões">
+<input id="f_pulmao" placeholder="Qtd exata de pulmões">
 <select id="f_ordemValor">
 <option value="">Ordenar por valor</option>
 <option value="asc">Menor → Maior</option>
@@ -309,36 +309,48 @@ FILTRO
 ========================= */
 function aplicarFiltros(){
 
-const cod=f_codigo.value.toLowerCase();
-const desc=f_desc.value.toLowerCase();
-const local=f_local.value.toLowerCase();
-const min=parse(f_min.value);
-const max=parse(f_max.value);
-const maxPulmao=f_pulmao.value ? parseInt(f_pulmao.value) : Infinity;
+    const cod = f_codigo.value.toLowerCase();
+    const desc = f_desc.value.toLowerCase();
+    const local = f_local.value.toLowerCase();
 
-view=base.filter(x=>{
+    const min = parse(f_min.value);
+    const max = parse(f_max.value);
 
-const pu=(pulmaoMap[x.codigo]||[]).length;
+    const qtdPulmao = f_pulmao.value.trim();
 
-return (
-(!cod||x.codigo.toLowerCase().includes(cod)) &&
-(!desc||x.desc.toLowerCase().includes(desc)) &&
-(!local||x.local.toLowerCase().includes(local)) &&
-(!min||x.valor>=min) &&
-(!max||x.valor<=max) &&
-(pu<=maxPulmao)
-);
-});
+    view = base.filter(x=>{
 
-const ordem=f_ordemValor.value;
-if(ordem==='asc') view.sort((a,b)=>a.valor-b.valor);
-if(ordem==='desc') view.sort((a,b)=>b.valor-a.valor);
+        const pu = (pulmaoMap[x.codigo] || []).length;
 
-render();
+        return (
+            (!cod || x.codigo.toLowerCase().includes(cod)) &&
+            (!desc || x.desc.toLowerCase().includes(desc)) &&
+            (!local || x.local.toLowerCase().includes(local)) &&
+            (!f_min.value || x.valor >= min) &&
+            (!f_max.value || x.valor <= max) &&
+
+            (
+                qtdPulmao === ''
+                ||
+                pu === parseInt(qtdPulmao)
+            )
+        );
+
+    });
+
+    const ordem = f_ordemValor.value;
+
+    if(ordem === 'asc'){
+        view.sort((a,b)=>a.valor - b.valor);
+    }
+
+    if(ordem === 'desc'){
+        view.sort((a,b)=>b.valor - a.valor);
+    }
+
+    render();
+
 }
-
-document.querySelectorAll('input').forEach(i=>{i.addEventListener('keyup',aplicarFiltros);});
-document.querySelectorAll('select').forEach(i=>{i.addEventListener('change',aplicarFiltros);});
 
 /* =========================
 EXPORT
