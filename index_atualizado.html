@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CD-107 WMS FINAL PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
+
+header{
+padding:14px;
+background:#111827;
+position:sticky;
+top:0;
+font-weight:bold;
+}
+
+.container{padding:14px;max-width:1400px;margin:auto}
+
+.kpi{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;
+margin-top:10px;
+}
+
+.kpi div{
+background:#111827;
+padding:12px;
+border-radius:8px;
+border:1px solid #1f2937;
+}
+
+.upload{
+margin-top:10px;
+background:#0f172a;
+padding:12px;
+border:1px solid #1f2937;
+border-radius:10px;
+}
+
+input{
+padding:10px;
+margin-top:8px;
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+border-radius:8px;
+width:100%;
+}
+
+.filters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:8px;
+margin-top:10px;
+}
+
+.actions{
+margin-top:10px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+button{
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.table{
+margin-top:10px;
+border:1px solid #1f2937;
+border-radius:10px;
+overflow:auto;
+max-height:500px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
+
+th{
+position:sticky;
+top:0;
+background:#111827;
+padding:10px;
+}
+
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
+}
+
+.chk{transform:scale(1.2)}
+select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;color:#fff;border-radius:8px;width:100%;}
+</style>
+</head>
+
+<body>
+
+<header>📊 CD-107 WMS FINAL PRO</header>
+
+<div class="container">
+
+<div class="kpi">
+<div>📦 Itens: <b id="k1">0</b></div>
+<div>📍 Apanhas: <b id="k2">0</b></div>
+<div>🏭 Pulmões: <b id="k3">0</b></div>
+</div>
+
+<div class="upload">
+<input type="file" id="file1">
+<small>Comparativo</small>
+</div>
+
+<div class="upload">
+<input type="file" id="file2">
+<small>Apanha</small>
+</div>
+
+<div class="upload">
+<input type="file" id="file3">
+<small>Pulmão</small>
+</div>
+
+<div class="filters">
+<input id="f_codigo" placeholder="Código">
+<input id="f_desc" placeholder="Descrição">
+<input id="f_local" placeholder="Local">
+<input id="f_min" placeholder="Valor mínimo">
+<input id="f_max" placeholder="Valor máximo">
+<input id="f_pulmao" placeholder="Qtd máxima de pulmões">
+<select id="f_ordemValor">
+<option value="">Ordenar por valor</option>
+<option value="asc">Menor → Maior</option>
+<option value="desc">Maior → Menor</option>
+</select>
+</div>
+
+<div class="actions">
+<button onclick="toggleAll()">Selecionar todos</button>
+<button onclick="clearSel()">Limpar seleção</button>
+<button onclick="exportar()">Excel</button>
+<button onclick="imprimir()">Imprimir auditoria</button>
+</div>
+
+<div class="table">
+<table>
+<thead>
+<tr>
+<th>✔</th>
+<th>Código</th>
+<th>Descrição</th>
+<th>Local</th>
+<th>Qtd</th>
+<th>Valor</th>
+<th>Apanha (endereços)</th>
+<th>Pulmões (endereços)</th>
+</tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+
+let base=[], view=[];
+let apanhaMap={};
+let pulmaoMap={};
+let selected=new Set();
+
+function parse(v){
+return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
+}
+
+/* =========================
+COMPARATIVO
+========================= */
+file1.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
+
+base=[];
+
+for(let i=1;i<lines.length;i++){
+const c=lines[i].split(';');
+if(c.length<10) continue;
+
+base.push({
+codigo:(c[0]||'').trim(),
+desc:c[1],
+local:c[2],
+qtd:parse(c[6]),
+valor:parse(c[9])
+});
+}
+
+view=[...base];
+render();
+kpi();
+};
+
+/* =========================
+APANHA (ENDEREÇOS AGORA)
+========================= */
+file2.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
+
+apanhaMap={};
+
+for(let i=1;i<lines.length;i++){
+const c=lines[i].split(';');
+
+const seq=(c[1]||'').trim();
+
+// endereço completo apanha (ajuste se quiser)
+const ender=`${c[0]}-${c[1]}-${c[2]}-${c[3]}-${c[4]}`;
+
+if(seq){
+if(!apanhaMap[seq]) apanhaMap[seq]=[];
+apanhaMap[seq].push(ender);
+}
+}
+
+kpi();
+render();
+};
+
+/* =========================
+PULMÃO (ENDEREÇOS)
+========================= */
+file3.onchange = async e=>{
+const lines=(await e.target.files[0].text()).split(/\r?\n/);
+
+pulmaoMap={};
+
+for(let i=1;i<lines.length;i++){
+const c=lines[i].split(';');
+
+const seq=(c[5]||'').trim();
+const ender=`${c[1]}-${c[2]}-${c[3]}-${c[4]}`;
+
+if(seq){
+if(!pulmaoMap[seq]) pulmaoMap[seq]=[];
+pulmaoMap[seq].push(ender);
+}
+}
+
+kpi();
+render();
+};
+
+/* =========================
+RENDER
+========================= */
+function render(){
+
+let html='';
+
+for(let x of view){
+
+const ap = apanhaMap[x.codigo] || [];
+const pu = pulmaoMap[x.codigo] || [];
+
+html+=`
+<tr>
+<td><input type="checkbox" class="chk" onchange="sel('${x.codigo}',this.checked)"></td>
+<td>${x.codigo}</td>
+<td>${x.desc}</td>
+<td>${x.local}</td>
+<td>${x.qtd}</td>
+<td>${x.valor.toFixed(2)}</td>
+
+<td>${ap.length ? ap.join('<br>') : 'SEM APANHA'}</td>
+<td>${pu.length ? pu.join(' - ') : 'SEM PULMÃO'}</td>
+</tr>`;
+}
+
+tb.innerHTML=html;
+}
+
+/* =========================
+SELEÇÃO
+========================= */
+function sel(c,v){
+v ? selected.add(c) : selected.delete(c);
+}
+
+function toggleAll(){
+view.forEach(x=>selected.add(x.codigo));
+render();
+}
+
+function clearSel(){
+selected.clear();
+render();
+}
+
+/* =========================
+FILTRO
+========================= */
+function aplicarFiltros(){
+
+const cod=f_codigo.value.toLowerCase();
+const desc=f_desc.value.toLowerCase();
+const local=f_local.value.toLowerCase();
+const min=parse(f_min.value);
+const max=parse(f_max.value);
+const maxPulmao=f_pulmao.value ? parseInt(f_pulmao.value) : Infinity;
+
+view=base.filter(x=>{
+
+const pu=(pulmaoMap[x.codigo]||[]).length;
+
+return (
+(!cod||x.codigo.toLowerCase().includes(cod)) &&
+(!desc||x.desc.toLowerCase().includes(desc)) &&
+(!local||x.local.toLowerCase().includes(local)) &&
+(!min||x.valor>=min) &&
+(!max||x.valor<=max) &&
+(pu<=maxPulmao)
+);
+});
+
+const ordem=f_ordemValor.value;
+if(ordem==='asc') view.sort((a,b)=>a.valor-b.valor);
+if(ordem==='desc') view.sort((a,b)=>b.valor-a.valor);
+
+render();
+}
+
+document.querySelectorAll('input').forEach(i=>{i.addEventListener('keyup',aplicarFiltros);});
+document.querySelectorAll('select').forEach(i=>{i.addEventListener('change',aplicarFiltros);});
+
+/* =========================
+EXPORT
+========================= */
+function exportar(){
+
+const data=view.map(x=>({
+Codigo:x.codigo,
+Descricao:x.desc,
+Local:x.local,
+Qtd:x.qtd,
+Valor:x.valor,
+Apanha:(apanhaMap[x.codigo]||[]).length,
+Pulmoes:(pulmaoMap[x.codigo]||[]).length
+}));
+
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"CD107");
+XLSX.writeFile(wb,"CD107.xlsx");
+}
+
+/* =========================
+IMPRIMIR
+========================= */
+function imprimir(){
+
+let w=window.open('','_blank');
+w.document.write('<h2>RELATÓRIO WMS CD-107</h2>');
+
+view.forEach(x=>{
+const ap=(apanhaMap[x.codigo]||[]).map(a=>a.split('-')[0]);
+const pu=pulmaoMap[x.codigo]||[];
+
+w.document.write(`
+<div style="border-bottom:1px solid #ccc;padding:10px">
+<b>${x.codigo}</b> - ${x.desc}<br>
+Apanha:<br>${ap.join(' - ')||'SEM APANHA'}<br><br>
+Pulmões:<br>${pu.join(' - ')||'SEM PULMÃO'}
+</div>
+`);
+});
+
+w.print();
+}
+
+/* =========================
+KPI
+========================= */
+function kpi(){
+
+k1.innerText=base.length;
+
+let a=0,p=0;
+for(let k in apanhaMap)a+=(apanhaMap[k]||[]).length;
+for(let k in pulmaoMap)p+=(pulmaoMap[k]||[]).length;
+
+k2.innerText=a;
+k3.innerText=p;
+}
+
+</script>
+
+</body>
+</html>
