@@ -164,8 +164,6 @@ select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;c
 <th>Local</th>
 <th>Qtd</th>
 <th>Valor</th>
-<th>Apanha (endereços)</th>
-<th>Pulmões (endereços)</th>
 </tr>
 </thead>
 <tbody id="tb"></tbody>
@@ -270,9 +268,6 @@ let html='';
 
 for(let x of view){
 
-const ap = apanhaMap[x.codigo] || [];
-const pu = pulmaoMap[x.codigo] || [];
-
 html+=`
 <tr>
 <td><input type="checkbox" class="chk" onchange="sel('${x.codigo}',this.checked)"></td>
@@ -281,15 +276,11 @@ html+=`
 <td>${x.local}</td>
 <td>${x.qtd}</td>
 <td>${x.valor.toFixed(2)}</td>
-
-<td>${ap.length ? ap.join('<br>') : 'SEM APANHA'}</td>
-<td>${pu.length ? pu.join(' - ') : 'SEM PULMÃO'}</td>
 </tr>`;
 }
 
 tb.innerHTML=html;
 }
-
 /* =========================
 SELEÇÃO
 ========================= */
