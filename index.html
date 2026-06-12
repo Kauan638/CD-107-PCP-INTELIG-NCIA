@@ -367,87 +367,161 @@ IMPRIMIR
 /* =========================
 IMPRIMIR
 ========================= */
+/* =========================
+IMPRIMIR
+========================= */
 function imprimir(){
 
-const itensSelecionados = view.filter(x =>
-    selected.has(x.codigo)
-);
+    const itensSelecionados = view.filter(x =>
+        selected.has(x.codigo)
+    );
 
-if(itensSelecionados.length === 0){
-    alert('Selecione pelo menos um item para imprimir.');
-    return;
-}
+    if(itensSelecionados.length === 0){
+        alert('Selecione pelo menos um item para imprimir.');
+        return;
+    }
 
-let w = window.open('', '_blank');
-
-w.document.write(`
-<html>
-<head>
-<title>RELATÓRIO WMS CD-107</title>
-
-<style>
-body{
-    font-family: Arial;
-    padding:20px;
-}
-
-.item{
-    border-bottom:1px solid #ccc;
-    padding:10px;
-    margin-bottom:10px;
-    page-break-inside: avoid;
-}
-
-h2{
-    margin-bottom:20px;
-}
-</style>
-
-</head>
-<body>
-
-<h2>RELATÓRIO WMS CD-107</h2>
-`);
-
-itensSelecionados.forEach(x=>{
-
-    const ap = (apanhaMap[x.codigo] || [])
-        .map(a => a.split('-')[0]);
-
-    const pu = pulmaoMap[x.codigo] || [];
+    let w = window.open('', '_blank');
 
     w.document.write(`
-    <div class="item">
+    <html>
+    <head>
+    <title>RELATÓRIO WMS CD-107</title>
 
-        <b>${x.codigo}</b> - ${x.desc}<br><br>
+    <style>
 
-        <b>Local:</b> ${x.local}<br>
-        <b>Quantidade:</b> ${x.qtd}<br>
-        <b>Valor:</b> ${x.valor.toFixed(2)}<br><br>
+    @page{
+        size:A4;
+        margin:10mm;
+    }
 
-        <b>Apanha:</b><br>
-        ${ap.length ? ap.join(' - ') : 'SEM APANHA'}
+    body{
+        font-family:Arial, sans-serif;
+        margin:0;
+        padding:0;
+        font-size:11px;
+    }
 
-        <br><br>
+    .pagina{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        grid-template-rows:1fr 1fr;
+        gap:10px;
+        height:270mm;
+        page-break-after:always;
+    }
 
-        <b>Pulmões:</b><br>
-        ${pu.length ? pu.join(' - ') : 'SEM PULMÃO'}
+    .card{
+        border:2px solid #000;
+        padding:10px;
+        box-sizing:border-box;
+        display:flex;
+        flex-direction:column;
+    }
 
-    </div>
+    .titulo{
+        font-size:14px;
+        font-weight:bold;
+        margin-bottom:10px;
+        border-bottom:1px solid #000;
+        padding-bottom:5px;
+    }
+
+    .linha{
+        margin:2px 0;
+    }
+
+    .secao{
+        margin-top:10px;
+    }
+
+    .rotulo{
+        font-weight:bold;
+    }
+
+    .vazio{
+        border:2px solid transparent;
+    }
+
+    </style>
+
+    </head>
+    <body>
     `);
 
-});
+    for(let i = 0; i < itensSelecionados.length; i += 4){
 
-w.document.write(`
-</body>
-</html>
-`);
+        w.document.write(`<div class="pagina">`);
 
-w.document.close();
+        const grupo = itensSelecionados.slice(i, i + 4);
 
-setTimeout(()=>{
-    w.print();
-},300);
+        grupo.forEach(x=>{
+
+            const ap = (apanhaMap[x.codigo] || [])
+                .map(a => a.split('-')[0]);
+
+            const pu = pulmaoMap[x.codigo] || [];
+
+            w.document.write(`
+                <div class="card">
+
+                    <div class="titulo">
+                        ${x.codigo} - ${x.desc}
+                    </div>
+
+                    <div class="linha">
+                        <span class="rotulo">Local:</span>
+                        ${x.local}
+                    </div>
+
+                    <div class="linha">
+                        <span class="rotulo">Quantidade:</span>
+                        ${x.qtd}
+                    </div>
+
+                    <div class="linha">
+                        <span class="rotulo">Valor:</span>
+                        ${x.valor.toFixed(2)}
+                    </div>
+
+                    <div class="secao">
+                        <span class="rotulo">Apanha:</span><br>
+                        ${ap.length
+                            ? ap.join('<br>')
+                            : 'SEM APANHA'}
+                    </div>
+
+                    <div class="secao">
+                        <span class="rotulo">Pulmões:</span><br>
+                        ${pu.length
+                            ? pu.join(' - ')
+                            : 'SEM PULMÃO'}
+                    </div>
+
+                </div>
+            `);
+
+        });
+
+        /* Completa espaços vazios caso tenha menos de 4 itens */
+        for(let j = grupo.length; j < 4; j++){
+            w.document.write(`<div class="card vazio"></div>`);
+        }
+
+        w.document.write(`</div>`);
+    }
+
+    w.document.write(`
+    </body>
+    </html>
+    `);
+
+    w.document.close();
+
+    setTimeout(()=>{
+        w.focus();
+        w.print();
+    },500);
 
 }
 /* =========================
