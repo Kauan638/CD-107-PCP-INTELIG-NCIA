@@ -174,6 +174,23 @@ select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;c
 
 <script>
 
+const file1 = document.getElementById('file1');
+const file2 = document.getElementById('file2');
+const file3 = document.getElementById('file3');
+
+const f_codigo = document.getElementById('f_codigo');
+const f_desc = document.getElementById('f_desc');
+const f_local = document.getElementById('f_local');
+const f_min = document.getElementById('f_min');
+const f_max = document.getElementById('f_max');
+const f_pulmao = document.getElementById('f_pulmao');
+const f_ordemValor = document.getElementById('f_ordemValor');
+
+const tb = document.getElementById('tb');
+const k1 = document.getElementById('k1');
+const k2 = document.getElementById('k2');
+const k3 = document.getElementById('k3');
+    
 let base=[], view=[];
 let apanhaMap={};
 let pulmaoMap={};
@@ -204,8 +221,8 @@ valor:parse(c[9])
 });
 }
 
-view=[...base];
-render();
+view = [...base];
+aplicarFiltros();
 kpi();
 };
 
@@ -232,7 +249,7 @@ apanhaMap[seq].push(ender);
 }
 
 kpi();
-render();
+aplicarFiltros();
 };
 
 /* =========================
@@ -256,7 +273,7 @@ pulmaoMap[seq].push(ender);
 }
 
 kpi();
-render();
+aplicarFiltros();
 };
 
 /* =========================
@@ -309,47 +326,41 @@ FILTRO
 ========================= */
 function aplicarFiltros(){
 
-    const cod = f_codigo.value.toLowerCase();
-    const desc = f_desc.value.toLowerCase();
-    const local = f_local.value.toLowerCase();
+    const cod = f_codigo.value.trim().toLowerCase();
+    const desc = f_desc.value.trim().toLowerCase();
+    const local = f_local.value.trim().toLowerCase();
 
     const min = parse(f_min.value);
     const max = parse(f_max.value);
 
     const qtdPulmao = f_pulmao.value.trim();
 
-    view = base.filter(x=>{
+    view = base.filter(x => {
 
         const pu = (pulmaoMap[x.codigo] || []).length;
 
         return (
-            (!cod || x.codigo.toLowerCase().includes(cod)) &&
-            (!desc || x.desc.toLowerCase().includes(desc)) &&
-            (!local || x.local.toLowerCase().includes(local)) &&
+            (!cod || String(x.codigo || '').toLowerCase().includes(cod)) &&
+            (!desc || String(x.desc || '').toLowerCase().includes(desc)) &&
+            (!local || String(x.local || '').toLowerCase().includes(local)) &&
             (!f_min.value || x.valor >= min) &&
             (!f_max.value || x.valor <= max) &&
-
             (
-                qtdPulmao === ''
-                ||
-                pu === parseInt(qtdPulmao)
+                qtdPulmao === '' ||
+                pu === Number(qtdPulmao)
             )
         );
-
     });
 
-    const ordem = f_ordemValor.value;
-
-    if(ordem === 'asc'){
-        view.sort((a,b)=>a.valor - b.valor);
+    if (f_ordemValor.value === 'asc') {
+        view.sort((a, b) => a.valor - b.valor);
     }
 
-    if(ordem === 'desc'){
-        view.sort((a,b)=>b.valor - a.valor);
+    if (f_ordemValor.value === 'desc') {
+        view.sort((a, b) => b.valor - a.valor);
     }
 
     render();
-
 }
 
 /* =========================
@@ -551,7 +562,14 @@ for(let k in pulmaoMap)p+=(pulmaoMap[k]||[]).length;
 k2.innerText=a;
 k3.innerText=p;
 }
-
+f_codigo.addEventListener('input', aplicarFiltros);
+f_desc.addEventListener('input', aplicarFiltros);
+f_local.addEventListener('input', aplicarFiltros);
+f_min.addEventListener('input', aplicarFiltros);
+f_max.addEventListener('input', aplicarFiltros);
+f_pulmao.addEventListener('input', aplicarFiltros);
+f_ordemValor.addEventListener('change', aplicarFiltros);
+    
 </script>
 
 </body>
