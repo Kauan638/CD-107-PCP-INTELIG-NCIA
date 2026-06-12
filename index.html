@@ -270,7 +270,13 @@ for(let x of view){
 
 html+=`
 <tr>
-<td><input type="checkbox" class="chk" onchange="sel('${x.codigo}',this.checked)"></td>
+<td>
+<input
+    type="checkbox"
+    class="chk"
+    ${selected.has(x.codigo) ? 'checked' : ''}
+    onchange="sel('${x.codigo}',this.checked)">
+</td>
 <td>${x.codigo}</td>
 <td>${x.desc}</td>
 <td>${x.local}</td>
@@ -358,27 +364,92 @@ XLSX.writeFile(wb,"CD107.xlsx");
 /* =========================
 IMPRIMIR
 ========================= */
+/* =========================
+IMPRIMIR
+========================= */
 function imprimir(){
 
-let w=window.open('','_blank');
-w.document.write('<h2>RELATÓRIO WMS CD-107</h2>');
+const itensSelecionados = view.filter(x =>
+    selected.has(x.codigo)
+);
 
-view.forEach(x=>{
-const ap=(apanhaMap[x.codigo]||[]).map(a=>a.split('-')[0]);
-const pu=pulmaoMap[x.codigo]||[];
-
-w.document.write(`
-<div style="border-bottom:1px solid #ccc;padding:10px">
-<b>${x.codigo}</b> - ${x.desc}<br>
-Apanha:<br>${ap.join(' - ')||'SEM APANHA'}<br><br>
-Pulmões:<br>${pu.join(' - ')||'SEM PULMÃO'}
-</div>
-`);
-});
-
-w.print();
+if(itensSelecionados.length === 0){
+    alert('Selecione pelo menos um item para imprimir.');
+    return;
 }
 
+let w = window.open('', '_blank');
+
+w.document.write(`
+<html>
+<head>
+<title>RELATÓRIO WMS CD-107</title>
+
+<style>
+body{
+    font-family: Arial;
+    padding:20px;
+}
+
+.item{
+    border-bottom:1px solid #ccc;
+    padding:10px;
+    margin-bottom:10px;
+    page-break-inside: avoid;
+}
+
+h2{
+    margin-bottom:20px;
+}
+</style>
+
+</head>
+<body>
+
+<h2>RELATÓRIO WMS CD-107</h2>
+`);
+
+itensSelecionados.forEach(x=>{
+
+    const ap = (apanhaMap[x.codigo] || [])
+        .map(a => a.split('-')[0]);
+
+    const pu = pulmaoMap[x.codigo] || [];
+
+    w.document.write(`
+    <div class="item">
+
+        <b>${x.codigo}</b> - ${x.desc}<br><br>
+
+        <b>Local:</b> ${x.local}<br>
+        <b>Quantidade:</b> ${x.qtd}<br>
+        <b>Valor:</b> ${x.valor.toFixed(2)}<br><br>
+
+        <b>Apanha:</b><br>
+        ${ap.length ? ap.join(' - ') : 'SEM APANHA'}
+
+        <br><br>
+
+        <b>Pulmões:</b><br>
+        ${pu.length ? pu.join(' - ') : 'SEM PULMÃO'}
+
+    </div>
+    `);
+
+});
+
+w.document.write(`
+</body>
+</html>
+`);
+
+w.document.close();
+
+setTimeout(()=>{
+    w.print();
+},300);
+
+}
 /* =========================
 KPI
 ========================= */
