@@ -102,6 +102,7 @@ border-bottom:1px solid #1f2937;
 }
 
 .chk{transform:scale(1.2)}
+select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;color:#fff;border-radius:8px;width:100%;}
 </style>
 </head>
 
@@ -138,7 +139,12 @@ border-bottom:1px solid #1f2937;
 <input id="f_local" placeholder="Local">
 <input id="f_min" placeholder="Valor mínimo">
 <input id="f_max" placeholder="Valor máximo">
-<input id="f_pulmao" placeholder="Qtd mínima de pulmões">
+<input id="f_pulmao" placeholder="Qtd máxima de pulmões">
+<select id="f_ordemValor">
+<option value="">Ordenar por valor</option>
+<option value="asc">Menor → Maior</option>
+<option value="desc">Maior → Menor</option>
+</select>
 </div>
 
 <div class="actions">
@@ -277,7 +283,7 @@ html+=`
 <td>${x.valor.toFixed(2)}</td>
 
 <td>${ap.length ? ap.join('<br>') : 'SEM APANHA'}</td>
-<td>${pu.length ? pu.join('<br>') : 'SEM PULMÃO'}</td>
+<td>${pu.length ? pu.join(' - ') : 'SEM PULMÃO'}</td>
 </tr>`;
 }
 
@@ -311,7 +317,7 @@ const desc=f_desc.value.toLowerCase();
 const local=f_local.value.toLowerCase();
 const min=parse(f_min.value);
 const max=parse(f_max.value);
-const minPulmao=parseInt(f_pulmao.value||0);
+const maxPulmao=f_pulmao.value ? parseInt(f_pulmao.value) : Infinity;
 
 view=base.filter(x=>{
 
@@ -323,16 +329,19 @@ return (
 (!local||x.local.toLowerCase().includes(local)) &&
 (!min||x.valor>=min) &&
 (!max||x.valor<=max) &&
-(!minPulmao||pu>=minPulmao)
+(pu<=maxPulmao)
 );
 });
+
+const ordem=f_ordemValor.value;
+if(ordem==='asc') view.sort((a,b)=>a.valor-b.valor);
+if(ordem==='desc') view.sort((a,b)=>b.valor-a.valor);
 
 render();
 }
 
-document.querySelectorAll('input').forEach(i=>{
-i.addEventListener('keyup',aplicarFiltros);
-});
+document.querySelectorAll('input').forEach(i=>{i.addEventListener('keyup',aplicarFiltros);});
+document.querySelectorAll('select').forEach(i=>{i.addEventListener('change',aplicarFiltros);});
 
 /* =========================
 EXPORT
@@ -360,18 +369,18 @@ IMPRIMIR
 ========================= */
 function imprimir(){
 
-let w=window.open('');
+let w=window.open('','_blank');
 w.document.write('<h2>RELATÓRIO WMS CD-107</h2>');
 
 view.forEach(x=>{
-const ap=apanhaMap[x.codigo]||[];
+const ap=(apanhaMap[x.codigo]||[]).map(a=>a.split('-')[0]);
 const pu=pulmaoMap[x.codigo]||[];
 
 w.document.write(`
 <div style="border-bottom:1px solid #ccc;padding:10px">
 <b>${x.codigo}</b> - ${x.desc}<br>
-Apanha:<br>${ap.join('<br>')||'SEM APANHA'}<br><br>
-Pulmões:<br>${pu.join('<br>')||'SEM PULMÃO'}
+Apanha:<br>${ap.join(' - ')||'SEM APANHA'}<br><br>
+Pulmões:<br>${pu.join(' - ')||'SEM PULMÃO'}
 </div>
 `);
 });
