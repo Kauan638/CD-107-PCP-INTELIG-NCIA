@@ -193,10 +193,9 @@ const k3 = document.getElementById('k3');
     
 let base=[], view=[];
 let apanhaMap={};
-let pulmaocount = {};
+let pulmaoMap={};
 let selected=new Set();
-let ultimoFiltro = '';
-    
+
 function parse(v){
 return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 }
@@ -272,12 +271,7 @@ if(!pulmaoMap[seq]) pulmaoMap[seq]=[];
 pulmaoMap[seq].push(ender);
 }
 }
-pulmaoCount = {};
 
-for(let codigo in pulmaoMap){
-    pulmaoCount[codigo] = pulmaoMap[codigo].length;
-}
-    
 kpi();
 aplicarFiltros();
 };
@@ -332,21 +326,6 @@ FILTRO
 ========================= */
 function aplicarFiltros(){
 
-    const filtroAtual = JSON.stringify({
-    cod:f_codigo.value,
-    desc:f_desc.value,
-    local:f_local.value,
-    min:f_min.value,
-    max:f_max.value,
-    pulmao:f_pulmao.value,
-    ordem:f_ordemValor.value
-});
-
-if(filtroAtual === ultimoFiltro){
-    return;
-}
-
-ultimoFiltro = filtroAtual;
     const cod = f_codigo.value.trim().toLowerCase();
     const desc = f_desc.value.trim().toLowerCase();
     const local = f_local.value.trim().toLowerCase();
@@ -358,7 +337,7 @@ ultimoFiltro = filtroAtual;
 
     view = base.filter(x => {
 
-        const pu = pulmaoCount[x.codigo] || 0;
+        const pu = (pulmaoMap[x.codigo] || []).length;
 
         return (
             (!cod || String(x.codigo || '').toLowerCase().includes(cod)) &&
@@ -583,28 +562,18 @@ for(let k in pulmaoMap)p+=(pulmaoMap[k]||[]).length;
 k2.innerText=a;
 k3.innerText=p;
 }
-let filtroTimeout;
-
-function filtroDebounce(){
-
-    clearTimeout(filtroTimeout);
-
-    filtroTimeout = setTimeout(() => {
-        aplicarFiltros();
-    }, 250);
-
-}
-
-f_codigo.addEventListener('input', filtroDebounce);
-f_desc.addEventListener('input', filtroDebounce);
-f_local.addEventListener('input', filtroDebounce);
-f_min.addEventListener('input', filtroDebounce);
-f_max.addEventListener('input', filtroDebounce);
-f_pulmao.addEventListener('input', filtroDebounce);
-
+f_codigo.addEventListener('input', aplicarFiltros);
+f_desc.addEventListener('input', aplicarFiltros);
+f_local.addEventListener('input', aplicarFiltros);
+f_min.addEventListener('input', aplicarFiltros);
+f_max.addEventListener('input', aplicarFiltros);
+f_pulmao.addEventListener('input', aplicarFiltros);
 f_ordemValor.addEventListener('change', aplicarFiltros);
     
 </script>
 
 </body>
 </html>
+
+
+
