@@ -361,12 +361,7 @@ XLSX.utils.book_append_sheet(wb,ws,"CD107");
 XLSX.writeFile(wb,"CD107.xlsx");
 }
 
-/* =========================
-IMPRIMIR
-========================= */
-/* =========================
-IMPRIMIR
-========================= */
+
 /* =========================
 IMPRIMIR
 ========================= */
@@ -391,8 +386,8 @@ function imprimir(){
     <style>
 
     @page{
-        size:A4;
-        margin:10mm;
+        size:A4 portrait;
+        margin:8mm;
     }
 
     body{
@@ -405,42 +400,45 @@ function imprimir(){
     .pagina{
         display:grid;
         grid-template-columns:1fr 1fr;
-        grid-template-rows:1fr 1fr;
-        gap:10px;
-        height:270mm;
+        grid-template-rows:repeat(4, 1fr);
+        gap:8px;
+        height:275mm;
         page-break-after:always;
     }
 
     .card{
-        border:2px solid #000;
-        padding:10px;
+        border:1.5px solid #000;
+        padding:8px;
         box-sizing:border-box;
         display:flex;
         flex-direction:column;
+        min-height:60mm;
     }
 
     .titulo{
-        font-size:14px;
+        font-size:13px;
         font-weight:bold;
-        margin-bottom:10px;
+        margin-bottom:6px;
         border-bottom:1px solid #000;
-        padding-bottom:5px;
+        padding-bottom:4px;
     }
 
     .linha{
         margin:2px 0;
-    }
-
-    .secao{
-        margin-top:10px;
+        font-size:11px;
     }
 
     .rotulo{
         font-weight:bold;
     }
 
+    .secao{
+        margin-top:5px;
+        font-size:11px;
+    }
+
     .vazio{
-        border:2px solid transparent;
+        border:none;
     }
 
     </style>
@@ -449,11 +447,11 @@ function imprimir(){
     <body>
     `);
 
-    for(let i = 0; i < itensSelecionados.length; i += 4){
+    for(let i = 0; i < itensSelecionados.length; i += 8){
 
         w.document.write(`<div class="pagina">`);
 
-        const grupo = itensSelecionados.slice(i, i + 4);
+        const grupo = itensSelecionados.slice(i, i + 8);
 
         grupo.forEach(x=>{
 
@@ -487,7 +485,7 @@ function imprimir(){
                     <div class="secao">
                         <span class="rotulo">Apanha:</span><br>
                         ${ap.length
-                            ? ap.join('<br>')
+                            ? ap.join(' - ')
                             : 'SEM APANHA'}
                     </div>
 
@@ -503,8 +501,8 @@ function imprimir(){
 
         });
 
-        /* Completa espaços vazios caso tenha menos de 4 itens */
-        for(let j = grupo.length; j < 4; j++){
+        /* Completa espaços vazios */
+        for(let j = grupo.length; j < 8; j++){
             w.document.write(`<div class="card vazio"></div>`);
         }
 
