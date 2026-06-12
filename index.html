@@ -8,32 +8,107 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0b1220,#111827);color:#e5e7eb}
-header{padding:20px;background:#0f172a;position:sticky;top:0;font-size:28px;font-weight:700;border-bottom:1px solid #1f2937;box-shadow:0 2px 15px rgba(0,0,0,.3)}
-.container{padding:20px;max-width:1600px;margin:auto}
-.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-top:20px}
-.kpi div{background:#111827;padding:20px;border-radius:16px;border:1px solid #1f2937;font-size:24px;font-weight:600;transition:.3s}
-.kpi div:hover{transform:translateY(-4px)}
-.upload{margin-top:15px;background:#111827;padding:18px;border:1px solid #1f2937;border-radius:16px}
-input,select{padding:12px;background:#0f172a;border:1px solid #374151;color:white;border-radius:10px;width:100%;box-sizing:border-box}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:20px}
-.actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
-button{background:#2563eb;border:none;color:white;padding:12px 18px;border-radius:10px;cursor:pointer}
-button:hover{background:#1d4ed8}
-.table{margin-top:20px;border-radius:16px;overflow:auto;max-height:600px;background:#111827}
-table{width:100%;border-collapse:collapse}
-th{position:sticky;top:0;background:#1e293b;padding:14px}
-td{padding:12px;border-bottom:1px solid #1f2937}
-tr:hover{background:#1e293b}
+body{margin:0;font-family:Segoe UI;background:#0b1220;color:#e5e7eb}
+
+header{
+padding:14px;
+background:#111827;
+position:sticky;
+top:0;
+font-weight:bold;
+}
+
+.container{padding:14px;max-width:1400px;margin:auto}
+
+.kpi{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;
+margin-top:10px;
+}
+
+.kpi div{
+background:#111827;
+padding:12px;
+border-radius:8px;
+border:1px solid #1f2937;
+}
+
+.upload{
+margin-top:10px;
+background:#0f172a;
+padding:12px;
+border:1px solid #1f2937;
+border-radius:10px;
+}
+
+input{
+padding:10px;
+margin-top:8px;
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+border-radius:8px;
+width:100%;
+}
+
+.filters{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:8px;
+margin-top:10px;
+}
+
+.actions{
+margin-top:10px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+button{
+background:#111827;
+border:1px solid #1f2937;
+color:#fff;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.table{
+margin-top:10px;
+border:1px solid #1f2937;
+border-radius:10px;
+overflow:auto;
+max-height:500px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
+}
+
+th{
+position:sticky;
+top:0;
+background:#111827;
+padding:10px;
+}
+
+td{
+padding:8px;
+border-bottom:1px solid #1f2937;
+}
+
 .chk{transform:scale(1.2)}
-.progress{width:100%;height:8px;background:#1f2937;border-radius:20px;margin-top:12px;overflow:hidden}
-.progress-bar{width:0%;height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width .4s ease}
+select{padding:10px;margin-top:8px;background:#111827;border:1px solid #1f2937;color:#fff;border-radius:8px;width:100%;}
 </style>
 </head>
 
 <body>
 
-<header>📊 CD-107 WMS FINAL PRO<div style="font-size:14px;font-weight:400;color:#94a3b8;margin-top:5px;">Auditoria Inteligente de Estoque</div></header>
+<header>📊 CD-107 WMS FINAL PRO</header>
 
 <div class="container">
 
@@ -45,17 +120,17 @@ tr:hover{background:#1e293b}
 
 <div class="upload">
 <input type="file" id="file1">
-<small>📦 Comparativo</small><div class="progress"><div class="progress-bar" id="prog1"></div></div>
+<small>Comparativo</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file2">
-<small>📍 Apanha</small><div class="progress"><div class="progress-bar" id="prog2"></div></div>
+<small>Apanha</small>
 </div>
 
 <div class="upload">
 <input type="file" id="file3">
-<small>🏭 Pulmão</small><div class="progress"><div class="progress-bar" id="prog3"></div></div>
+<small>Pulmão</small>
 </div>
 
 <div class="filters">
@@ -129,13 +204,7 @@ return parseFloat(String(v||0).replace(/\./g,'').replace(',','.'))||0;
 COMPARATIVO
 ========================= */
 file1.onchange = async e=>{
-document.getElementById('prog1')?.style.setProperty('width','30%');
-document.getElementById('prog2')?.style.setProperty('width','30%');
-document.getElementById('prog3')?.style.setProperty('width','30%');
 const lines=(await e.target.files[0].text()).split(/\r?\n/);
-document.getElementById('prog3')?.style.setProperty('width','100%');
-document.getElementById('prog2')?.style.setProperty('width','100%');
-document.getElementById('prog1')?.style.setProperty('width','100%');
 
 base=[];
 
@@ -338,27 +407,67 @@ function imprimir(){
     <title>RELATÓRIO WMS CD-107</title>
 
     <style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0b1220,#111827);color:#e5e7eb}
-header{padding:20px;background:#0f172a;position:sticky;top:0;font-size:28px;font-weight:700;border-bottom:1px solid #1f2937;box-shadow:0 2px 15px rgba(0,0,0,.3)}
-.container{padding:20px;max-width:1600px;margin:auto}
-.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-top:20px}
-.kpi div{background:#111827;padding:20px;border-radius:16px;border:1px solid #1f2937;font-size:24px;font-weight:600;transition:.3s}
-.kpi div:hover{transform:translateY(-4px)}
-.upload{margin-top:15px;background:#111827;padding:18px;border:1px solid #1f2937;border-radius:16px}
-input,select{padding:12px;background:#0f172a;border:1px solid #374151;color:white;border-radius:10px;width:100%;box-sizing:border-box}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:20px}
-.actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
-button{background:#2563eb;border:none;color:white;padding:12px 18px;border-radius:10px;cursor:pointer}
-button:hover{background:#1d4ed8}
-.table{margin-top:20px;border-radius:16px;overflow:auto;max-height:600px;background:#111827}
-table{width:100%;border-collapse:collapse}
-th{position:sticky;top:0;background:#1e293b;padding:14px}
-td{padding:12px;border-bottom:1px solid #1f2937}
-tr:hover{background:#1e293b}
-.chk{transform:scale(1.2)}
-.progress{width:100%;height:8px;background:#1f2937;border-radius:20px;margin-top:12px;overflow:hidden}
-.progress-bar{width:0%;height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width .4s ease}
-</style>
+
+    @page{
+        size:A4 portrait;
+        margin:8mm;
+    }
+
+    body{
+        font-family:Arial, sans-serif;
+        margin:0;
+        padding:0;
+        font-size:12px;
+    }
+
+    .pagina{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        grid-template-rows:repeat(4, 1fr);
+        gap:8px;
+        height:275mm;
+        page-break-after:always;
+    }
+
+    .card{
+        border:1.5px solid #000;
+        padding:8px;
+        box-sizing:border-box;
+        display:flex;
+        flex-direction:column;
+        min-height:60mm;
+    }
+
+    .titulo{
+        font-size:15px;
+        font-weight:bold;
+        margin-bottom:6px;
+        border-bottom:1px solid #000;
+        padding-bottom:4px;
+    }
+
+    .linha{
+        margin:3px 0;
+        font-size:12px;
+        line-height:1.2;
+    }
+
+    .rotulo{
+        font-weight:bold;
+    }
+
+    .secao{
+        margin-top:6px;
+        font-size:12px;
+            line-height:1.2;
+
+    }
+
+    .vazio{
+        border:none;
+    }
+
+    </style>
 
     </head>
     <body>
